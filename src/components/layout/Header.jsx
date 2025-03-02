@@ -1,8 +1,5 @@
-import React from "react";
-import { Link, Links } from "react-router";
+import { Link } from "react-router";
 import logo from "../../assets/logo.svg";
-import loginIcon from "../../assets/login-icon.svg";
-import navbarIcon from "../../assets/navbar-icon.svg";
 import { VscAccount } from "react-icons/vsc";
 import { FaBars } from "react-icons/fa";
 import vnLanguage from "../../assets/vn-language.png";
@@ -28,7 +25,7 @@ const Header = () => {
             {/* navigate detail section */}
             <div className="flex items-center gap-2 text-white lg:hidden">
               {/* navigate login section */}
-              <span className="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-[4px] duration-200 hover:bg-white/10">
+              <span className="group relative flex min-h-[48px] min-w-[48px] items-center justify-center rounded-[4px] hover:bg-white/10">
                 <Link
                   to="/login"
                   className="relative flex h-full w-full items-center justify-center px-3 py-2"
@@ -38,6 +35,9 @@ const Header = () => {
                   </span>
                   <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-amber-700"></div>
                 </Link>
+                <div className="absolute top-16 z-[200] min-w-[90px] rounded-[6px] bg-black p-1 text-center opacity-0 transition-all delay-200 duration-200 group-hover:top-12 group-hover:opacity-100">
+                  <span className="text-[14px]">Đăng nhập</span>
+                </div>
               </span>
               {/* navigate bar */}
               <div className="inline-block max-w-full shrink-0 rounded-[4px] align-middle duration-200 hover:bg-white/10">
