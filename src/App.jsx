@@ -1,8 +1,32 @@
 import AppLayout from "./components/layout/AppLayout";
 import { BrowserRouter, Routes, Route } from "react-router";
 import Home from "./page/Home";
-
+import { useEffect } from "react";
+import AOS from "aos";
+import "aos/dist/aos.css";
+/**
+ * The main application component that initializes AOS (Animate On Scroll) library
+ * and sets up the routing for the application.
+ *
+ * @component
+ * @example
+ * return (
+ *   <App />
+ * )
+ *
+ * @returns {JSX.Element} The rendered component.
+ */
 function App() {
+  useEffect(() => {
+    AOS.init({
+      offset: 100,
+      duration: 800,
+      easing: "ease-in-sine",
+      delay: 100,
+      disable: "mobile",
+    });
+    AOS.refresh();
+  }, []);
   return (
     <BrowserRouter>
       <Routes>

@@ -1,8 +1,13 @@
-import React from "react";
 import Banner from "../components/layout/Banner";
+import BodyLayout from "../components/layout/BodyLayout";
 
 const Home = () => {
-  return <Banner />;
+  return (
+    <>
+      <Banner />
+      <BodyLayout />
+    </>
+  );
 };
 
 export default Home;

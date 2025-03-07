@@ -4,7 +4,7 @@ import { Outlet } from "react-router";
 
 const AppLayout = () => {
   return (
-    <div className="bg-fourth">
+    <div className="bg-white">
       <Header />
       <main>
         <Outlet />

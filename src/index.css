@@ -10,17 +10,8 @@
   --shadow-searchbox: 0px 2px 8px 0px rgba(26, 26, 26, 0.16);
   --spacing-searchbox: calc(100% - 10px);
   --spacing-listbox: calc(100% + 7px);
-
-  /* --animate-placeholderfade: wiggle 0.2 ease-in-out;
-  @keyframes placeholderfade {
-    0% {
-      color: "#1a1a1a";
-    }
-    100% {
-      color: "#959595";
-    }
-  }
- */
+  --spacing-item: calc((100% - 16px * 3) / 4);
+  --spacing-item2: calc((100% - 16px * 5) / 6);
 }
 
 @source "./src/**/*.{jsx,tsx}";
