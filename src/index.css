@@ -10,8 +10,13 @@
   --shadow-searchbox: 0px 2px 8px 0px rgba(26, 26, 26, 0.16);
   --spacing-searchbox: calc(100% - 10px);
   --spacing-listbox: calc(100% + 7px);
-  --spacing-item: calc((100% - 16px * 3) / 4);
-  --spacing-item2: calc((100% - 16px * 5) / 6);
+  --spacing-item-lg: calc((100% - 16px * 3) / 4);
+  --spacing-item-sm: calc((100% - 16px * 1) / 2);
+  --spacing-item-md: calc((100% - 16px * 2) / 3);
+  --spacing-item2-lg: calc((100% - 16px * 5) / 6);
+  --spacing-item2-sm: calc((100% - 16px * 3) / 4);
+  --spacing-item2-md: calc((100% - 16px * 4) / 5);
+  --spacing-item2: calc((100% - 16px * 2) / 3);
 }
 
 @source "./src/**/*.{jsx,tsx}";
