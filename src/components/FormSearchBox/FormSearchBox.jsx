@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   IoBedOutline,
   IoClose,
@@ -10,6 +10,7 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 import DateRange from "./DateRange";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import NumberOfPersonBox from "./NumerOfPersonBox";
 
 const locations = [
   {
@@ -48,7 +49,28 @@ const dayShortNames = {
   "Thứ Bảy": "T7",
   "Chủ Nhật": "CN",
 };
+
 const FormSearchBox = () => {
+  const [numbers, setNumbers] = useState({
+    adults: {
+      name: "Người lớn",
+      valueNow: 1,
+      valueMin: 1,
+      valueMax: 30,
+    },
+    children: {
+      name: "Trẻ em",
+      valueNow: 0,
+      valueMin: 0,
+      valueMax: 10,
+    },
+    rooms: {
+      name: "Phòng",
+      valueNow: 1,
+      valueMin: 1,
+      valueMax: 30,
+    },
+  });
   const [date, setDate] = useState({
     startDate: new Date(),
     endDate: new Date(),
@@ -58,6 +80,7 @@ const FormSearchBox = () => {
   const [isVisible, setIsVisible] = useState(false);
   const wrapperRef = useRef(null);
   const [openDate, setOpenDate] = useState(false);
+  const [openPersonBox, setOpenPersonBox] = useState(false);
 
   const handleChange = (ranges) => {
     setDate(ranges.selection);
@@ -65,6 +88,10 @@ const FormSearchBox = () => {
 
   const handleClickDate = () => {
     setOpenDate((prev) => !prev);
+  };
+
+  const handleClickPersonBox = () => {
+    setOpenPersonBox((prev) => !prev);
   };
 
   const handleClickOutside = (event) => {
@@ -93,10 +120,30 @@ const FormSearchBox = () => {
     return `${dayShortNames[dayStart]}, ${format(date, "d 'tháng' M", { locale: vi })}`;
   };
 
+  const increase = (type) => {
+    setNumbers((prev) => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        valueNow: Math.min(prev[type].valueNow + 1, prev[type].valueMax),
+      },
+    }));
+  };
+
+  const decrease = (type) => {
+    setNumbers((prev) => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        valueNow: Math.max(prev[type].valueNow - 1, prev[type].valueMin),
+      },
+    }));
+  };
+
   return (
     <div className="absolute left-[50%] w-searchbox max-w-[1100px] -translate-x-[50%] -translate-y-[54px] max-[900px]:-bottom-[118px]">
       <div>
-        <form action="">
+        <form action="" method="GET">
           <div className="mt-6 mb-4 flex max-w-full flex-col gap-1 rounded-[8px] bg-border p-1 shadow-searchbox md:flex-row">
             {/* search destination */}
             <div
@@ -128,7 +175,7 @@ const FormSearchBox = () => {
               </div>
               {/* list box destination lately */}
               {isVisible && (
-                <div className="location-list-box">
+                <div className="location-list-box z-[999]">
                   <div className="w-full text-[#1a1a1a]">
                     <div className="p-3 text-[14px] font-bold">
                       Điểm đến được ưa thích gần đây
@@ -162,11 +209,8 @@ const FormSearchBox = () => {
               )}
             </div>
             {/* choose check-in check-out */}
-            <div
-              onClick={handleClickDate}
-              className="relative cursor-pointer items-center rounded-[4px] bg-white text-black hover:shadow-[0_0_0_1px_#f56700] lg:w-[27%]"
-            >
-              <div className="p-2">
+            <div className="relative cursor-pointer items-center rounded-[4px] bg-white text-black hover:shadow-[0_0_0_1px_#f56700] lg:w-[27%]">
+              <div onClick={handleClickDate} className="p-2">
                 <div className="flex items-center text-[14px] font-medium text-[#1a1a1a]">
                   <div className="py-1 pl-2">
                     <span className="flex items-center">
@@ -193,16 +237,18 @@ const FormSearchBox = () => {
                 </div>
               </div>
               {openDate && (
-                <DateRange
-                  date={date}
-                  handleChange={handleChange}
-                  className="absolute top-listbox shadow-searchbox"
-                />
+                <>
+                  <DateRange
+                    date={date}
+                    handleChange={handleChange}
+                    className="absolute top-listbox shadow-searchbox"
+                  />
+                </>
               )}
             </div>
             {/* choose number of person */}
-            <div className="rounded-[4px] bg-white text-black hover:shadow-[0_0_0_1px_#f56700] lg:w-[27%]">
-              <div className="p-2">
+            <div className="relative rounded-[4px] bg-white text-black hover:shadow-[0_0_0_1px_#f56700] lg:w-[27%]">
+              <div onClick={handleClickPersonBox} className="p-2">
                 <button
                   className="relative my-[2px] flex w-full cursor-pointer items-center py-1 pr-6 pl-2 text-[14px] font-medium text-[#1a1a1a]"
                   type="button"
@@ -211,7 +257,11 @@ const FormSearchBox = () => {
                     <span className="flex items-center pr-2">
                       <IoPersonOutline className="text-[24px]" />
                     </span>
-                    <span>1 người lớn · 1 trẻ em · 2 phòng</span>
+                    <span>
+                      {numbers.adults.valueNow} người lớn ·{" "}
+                      {numbers.children.valueNow} trẻ em ·{" "}
+                      {numbers.rooms.valueNow} phòng
+                    </span>
                   </div>
                   <div className="absolute right-[1px]">
                     <span>
@@ -220,6 +270,13 @@ const FormSearchBox = () => {
                   </div>
                 </button>
               </div>
+              {openPersonBox && (
+                <NumberOfPersonBox
+                  numbers={numbers}
+                  increase={increase}
+                  decrease={decrease}
+                />
+              )}
             </div>
             {/* button submit */}
             <div className="flex min-h-[50px] flex-auto overflow-hidden rounded-[4px] text-center text-[20px]">
