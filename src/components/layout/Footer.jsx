@@ -16,7 +16,7 @@ const Footer = () => {
   return (
     <footer className="bg-gray-100 px-4 py-8 text-sm text-gray-800">
       <div className="mx-auto max-w-[1110px]">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {/* Support Column */}
           <div>
             <h3 className="mb-4 font-bold">Hỗ trợ</h3>

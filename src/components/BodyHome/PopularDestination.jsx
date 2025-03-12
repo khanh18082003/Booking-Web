@@ -142,16 +142,19 @@ const PopularDestination = () => {
           <div
             className="flex transition-transform duration-300 ease-in-out"
             style={{
-              transform: `translateX(-${scrollPosition * (100 / getVisibleItemCount())}%)`,
+              transform:
+                scrollPosition !== 0
+                  ? `translateX(calc(-${scrollPosition * (100 / getVisibleItemCount())}% - 16px))`
+                  : "none",
             }}
           >
             {data.map((item, index) => (
               <div
                 key={item.id}
-                className="mr-4 w-full flex-none cursor-pointer transition-all duration-200 sm:w-1/2 md:w-1/3 lg:w-item2"
+                className="mr-4 w-item2 flex-none cursor-pointer transition-all duration-200 sm:w-item2-sm md:w-item2-md lg:w-item2-lg"
               >
                 <Link to={`/${index}`} className="block bg-white">
-                  <div className="max-h-[136px] overflow-hidden rounded-lg">
+                  <div className="max-h-[200px] overflow-hidden rounded-lg lg:max-h-[136px]">
                     <img
                       src={
                         item.image ||
@@ -159,6 +162,7 @@ const PopularDestination = () => {
                       }
                       alt={item.title}
                       className="h-full w-full object-cover"
+                      loading="lazy"
                     />
                   </div>
                   <div className="pt-2 text-left">

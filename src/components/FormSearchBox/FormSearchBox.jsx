@@ -11,6 +11,7 @@ import DateRange from "./DateRange";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import NumberOfPersonBox from "./NumerOfPersonBox";
+import { useNavigate } from "react-router";
 
 const locations = [
   {
@@ -50,7 +51,7 @@ const dayShortNames = {
   "Chủ Nhật": "CN",
 };
 
-const FormSearchBox = () => {
+const FormSearchBox = ({ showTitle }) => {
   const [numbers, setNumbers] = useState({
     adults: {
       name: "Người lớn",
@@ -81,6 +82,7 @@ const FormSearchBox = () => {
   const wrapperRef = useRef(null);
   const [openDate, setOpenDate] = useState(false);
   const [openPersonBox, setOpenPersonBox] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (ranges) => {
     setDate(ranges.selection);
@@ -140,11 +142,39 @@ const FormSearchBox = () => {
     }));
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault(); // Ngăn reload trang
+    const formData = new FormData(e.target);
+    const destination = formData.get("destination");
+    const startDate = format(date.startDate, "yyyy-MM-dd");
+    const endDate = format(date.endDate, "yyyy-MM-dd");
+    const adults = numbers.adults.valueNow;
+    const children = numbers.children.valueNow;
+    const rooms = numbers.rooms.valueNow;
+    navigate(
+      `/searchresults?destination=${destination}&checkin=${startDate}&checkout=${endDate}&group_adults=${adults}&group_children=${children}&no_rooms=${rooms}`,
+    );
+  };
+
+  const handleChooseItemBox = (e) => {
+    const value = e.currentTarget;
+    const location = value.querySelector("h4").textContent;
+    const locationDetail = value.querySelector("p").textContent;
+    setInputChange(location + ", " + locationDetail);
+
+    setIsVisible(false);
+  };
+
   return (
-    <div className="absolute left-[50%] w-searchbox max-w-[1100px] -translate-x-[50%] -translate-y-[54px] max-[900px]:-bottom-[118px]">
+    <div
+      data-aos="fade-zoom-in"
+      data-aos-duration="500"
+      data-aos-delay="100"
+      className={`absolute left-[50%] w-searchbox max-w-[1100px] -translate-x-[50%] -translate-y-[54px] ${showTitle && "max-[900px]:-bottom-[118px]"}`}
+    >
       <div>
-        <form action="" method="GET">
-          <div className="mt-6 mb-4 flex max-w-full flex-col gap-1 rounded-[8px] bg-border p-1 shadow-searchbox md:flex-row">
+        <form action="" method="GET" onSubmit={handleSubmit}>
+          <div className="mt-6 mb-4 flex max-w-full flex-col gap-1 rounded-[8px] bg-border p-1 shadow-searchbox lg:flex-row">
             {/* search destination */}
             <div
               ref={wrapperRef}
@@ -164,6 +194,7 @@ const FormSearchBox = () => {
                     onFocus={() => setIsVisible(true)}
                     value={inputChange}
                     placeholder="Bạn muốn đến đâu?"
+                    required
                     className="h-[36px] w-full grow px-2 py-1 text-[14px] leading-[20px] font-medium outline-none placeholder:text-[#1a1a1a] focus:placeholder:text-[#959595]"
                   />
                   <div
@@ -184,6 +215,7 @@ const FormSearchBox = () => {
                       {locations.map((location, index) => (
                         <li
                           key={index}
+                          onClick={handleChooseItemBox}
                           className="overflow-hidden border-b-[1px] border-solid border-[#e7e7e7]"
                         >
                           <div className="cursor-pointer p-2 text-left hover:bg-[#f2f2f2]">
@@ -257,7 +289,7 @@ const FormSearchBox = () => {
                     <span className="flex items-center pr-2">
                       <IoPersonOutline className="text-[24px]" />
                     </span>
-                    <span>
+                    <span className="block overflow-hidden text-ellipsis whitespace-nowrap">
                       {numbers.adults.valueNow} người lớn ·{" "}
                       {numbers.children.valueNow} trẻ em ·{" "}
                       {numbers.rooms.valueNow} phòng
@@ -282,7 +314,7 @@ const FormSearchBox = () => {
             <div className="flex min-h-[50px] flex-auto overflow-hidden rounded-[4px] text-center text-[20px]">
               <button
                 type="submit"
-                className="w-full cursor-pointer bg-[#006ce4] px-6 py-1 leading-7 font-medium duration-200 hover:bg-secondary"
+                className="w-full cursor-pointer bg-[#006ce4] px-6 py-1 leading-7 font-medium text-white duration-200 hover:bg-secondary"
               >
                 <span>Tìm</span>
               </button>

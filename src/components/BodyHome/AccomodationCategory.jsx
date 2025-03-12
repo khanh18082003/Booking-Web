@@ -67,7 +67,6 @@ const AccommodationCategory = () => {
 
   // Tính toán số lượng items hiển thị dựa trên kích thước màn hình
   const getVisibleItemCount = () => {
-    if (windowWidth < 640) return 1; // Mobile
     if (windowWidth < 768) return 2; // Small tablet
     if (windowWidth < 1024) return 3; // Large tablet
     return 4; // Desktop
@@ -126,13 +125,16 @@ const AccommodationCategory = () => {
           <div
             className="flex transition-transform duration-300 ease-in-out"
             style={{
-              transform: `translateX(-${scrollPosition * (100 / getVisibleItemCount())}%)`,
+              transform:
+                scrollPosition !== 0
+                  ? `translateX(calc(-${scrollPosition * (100 / getVisibleItemCount())}% - 16px))`
+                  : "none",
             }}
           >
             {data.map((item, index) => (
               <div
                 key={item.id}
-                className="mr-4 w-full flex-none cursor-pointer transition-all duration-200 sm:w-1/2 md:w-1/3 lg:w-item"
+                className="mr-4 w-item-sm flex-none cursor-pointer transition-all duration-200 md:w-item-md lg:w-item-lg"
               >
                 <Link to={`/${index}`} className="block bg-white">
                   <div className="max-h-52 overflow-hidden rounded-lg">
@@ -143,6 +145,7 @@ const AccommodationCategory = () => {
                       }
                       alt={item.title}
                       className="h-full w-full object-cover"
+                      loading="lazy"
                     />
                   </div>
                   <div className="pt-2 text-left">
