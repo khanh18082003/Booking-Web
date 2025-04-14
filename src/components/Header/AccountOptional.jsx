@@ -142,6 +142,8 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
 AccountOptional.propTypes = {
   isVisible: PropTypes.bool.isRequired, // Controls visibility
   closeAccountOptional: PropTypes.func.isRequired, // Function to close the component
+  avatar: PropTypes.string, // Optional avatar URL
+  name: PropTypes.string, // Optional user name
 };
 
 export default AccountOptional;
