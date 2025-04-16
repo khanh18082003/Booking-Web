@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import Properties from "./page/Properties";
+import RoomDetail from "./page/RoomDetail";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -37,6 +38,7 @@ function App() {
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Home />} />
           <Route path="/searchresults" element={<Properties />} />
+          <Route path="/roomdetail" element={<RoomDetail />} />
           <Route path="*" element={<h1>Not Found</h1>} />
         </Route>
         <Route path="login" element={<Login />} />
