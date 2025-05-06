@@ -7,30 +7,51 @@ import PostProperty from "../Header/PostProperty";
 import Login from "../Header/Login";
 import NavigationSmallDevice from "../Header/NavigationSmallDevice";
 import Navigation from "../Header/Navigation";
-
 import Account from "../Header/Account";
 import AccountOptional from "../Header/AccountOptional";
-import { useContext, useEffect, useState } from "react";
-import AuthContext from "../../utils/AuthProvider";
+import { useEffect, useState } from "react";
+import { useStore } from "../../utils/AuthProvider";
+import axios, { registerLoadingHandlers } from "../../utils/axiosCustomize";
+import ApiLoading from "../common/ApiLoading";
 
 const AppLayout = () => {
-  const { authState, setAuthState } = useContext(AuthContext); // Access authState from AuthContext
-  const isAuthenticated = !!authState.accessToken; // Check if accessToken exists
+  const { store, setStore, startApiCall, finishApiCall } = useStore();
   const [isAccountOptionalVisible, setAccountOptionalVisible] = useState(false);
-  const api = authState.api;
+  const isAuthenticated = localStorage.getItem("accessToken") !== null;
+
+  // Register the loading handlers with axios
   useEffect(() => {
-    if (!authState.api || !authState.accessToken) return;
+    registerLoadingHandlers(startApiCall, finishApiCall);
+  }, [startApiCall, finishApiCall]);
+
+  // Add click outside handler for account dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Don't close if clicking on the account button itself (that's handled by the toggle function)
+      if (
+        isAccountOptionalVisible &&
+        !event.target.closest(".account-button") &&
+        !event.target.closest(".account-optional")
+      ) {
+        setAccountOptionalVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isAccountOptionalVisible]);
+
+  useEffect(() => {
+    if (!isAuthenticated || store.userProfile) return;
 
     const fetchUserProfile = async () => {
       try {
         // Fetch user profile using the API
-        const res = await api.get("/users/my-profile", {
-          headers: {
-            Authorization: `Bearer ${authState.accessToken}`,
-          },
-        });
+        const res = await axios.get("/users/my-profile");
         const user = res.data.data; // tùy theo response
-        setAuthState((prev) => ({
+        setStore((prev) => ({
           ...prev,
           userProfile: user,
         }));
@@ -40,9 +61,11 @@ const AppLayout = () => {
     };
 
     fetchUserProfile();
-  }, [authState.api, authState.accessToken]);
+  }, [isAuthenticated]);
 
-  const toggleAccountOptional = () => {
+  const toggleAccountOptional = (e) => {
+    // Prevent event bubbling to avoid the document click handler from immediately closing the dropdown
+    if (e) e.stopPropagation();
     setAccountOptionalVisible((prev) => !prev);
   };
 
@@ -52,13 +75,16 @@ const AppLayout = () => {
 
   return (
     <div className="relative bg-white">
+      {/* Global API Loading Indicator */}
+      <ApiLoading />
+
       <Header>
         {/* navigate detail section */}
         <NavigationSmallDevice
           isAuthenticated={isAuthenticated}
           toggleAccountOptional={toggleAccountOptional}
-          avatar={authState.userProfile?.avatar}
-          name={authState.userProfile?.name || "Your account"}
+          avatar={store.userProfile?.avatar}
+          name={store.userProfile?.name || "Your account"}
         />
         {/* navigate device of width >= 1024 */}
         <Navigation>
@@ -67,8 +93,8 @@ const AppLayout = () => {
           <PostProperty />
           {isAuthenticated ? (
             <Account
-              name={authState.userProfile?.name || "Your account"}
-              avatar={authState.userProfile?.avatar}
+              name={store.userProfile?.name || "Your account"}
+              avatar={store.userProfile?.avatar}
               toggleAccountOptional={toggleAccountOptional}
             />
           ) : (
@@ -80,8 +106,8 @@ const AppLayout = () => {
           <AccountOptional
             isVisible={isAccountOptionalVisible}
             closeAccountOptional={closeAccountOptional}
-            avatar={authState.userProfile?.avatar}
-            name={authState.userProfile?.name || "Your account"}
+            avatar={store.userProfile?.avatar}
+            name={store.userProfile?.name || "Your account"}
           />
         )}
       </Header>

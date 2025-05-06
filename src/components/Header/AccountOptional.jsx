@@ -4,15 +4,15 @@ import { IoMdClose } from "react-icons/io";
 import { MdPerson2 } from "react-icons/md";
 import { FaRegCommentDots, FaRegHeart } from "react-icons/fa";
 import { BiLogOutCircle } from "react-icons/bi";
-import { useContext, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import defaultAvatar from "../../assets/default-avatar.avif"; // Import a default avatar image
-import AuthContext from "../../utils/AuthProvider";
+import axios from "../../utils/axiosCustomize";
+import { useStore } from "../../utils/AuthProvider";
 
 const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
   const containerRef = useRef(null);
-  const { authState, setAuthState } = useContext(AuthContext); // Access setAuthState
-  const api = authState.api;
+  const { store, setStore } = useStore(); // Assuming you have a context or state management for auth
   const navigate = useNavigate(); // Initialize useNavigate
 
   // Close the dropdown when clicking outside
@@ -41,7 +41,7 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] overflow-hidden bg-white text-black lg:absolute lg:inset-auto lg:top-16 lg:right-30 lg:w-64 lg:rounded-lg lg:shadow-lg"
+      className="account-optional fixed inset-0 z-[9999] overflow-hidden bg-white text-black lg:absolute lg:inset-auto lg:top-16 lg:right-30 lg:w-64 lg:rounded-lg lg:shadow-lg"
     >
       {/* Close button (only visible on small screens) */}
       <button
@@ -66,7 +66,7 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
       {/* Menu options */}
       <div className="mt-4 flex flex-col lg:mt-0">
         <Link
-          to="/account"
+          to="/myaccount"
           className="flex items-center gap-4 px-6 py-4 hover:bg-gray-100"
         >
           <MdPerson2 className="text-xl" />
@@ -92,16 +92,16 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
             // Call API /auth/logout
             const logout = async () => {
               try {
-                const response = await api.post(
+                const response = await axios.post(
                   "/auth/logout",
                   {
-                    access_token: authState.accessToken,
+                    access_token: localStorage.getItem("accessToken"),
                   },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${authState.accessToken}`,
-                    },
-                  },
+                  // {
+                  //   headers: {
+                  //     Authorization: `Bearer ${authState.accessToken}`,
+                  //   },
+                  // },
                 );
                 const data = response.data;
                 if (data.code !== "M000") {
@@ -112,11 +112,10 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
 
                 // Clear user data from local storage and context
                 localStorage.removeItem("accessToken");
-                setAuthState({
-                  accessToken: null,
-                  api: authState.api,
+                setStore((prev) => ({
+                  ...prev,
                   userProfile: null,
-                });
+                }));
 
                 // Redirect to Home page
                 navigate("/");

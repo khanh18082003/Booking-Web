@@ -16,7 +16,7 @@ const NavigationSmallDevice = ({
         {isAuthenticated ? (
           <div
             onClick={toggleAccountOptional}
-            className="min-h-[24px] min-w-[24px]"
+            className="account-button min-h-[24px] min-w-[24px]"
           >
             <span className="">
               {avatar ? (
@@ -65,6 +65,8 @@ const NavigationSmallDevice = ({
 NavigationSmallDevice.propTypes = {
   isAuthenticated: PropTypes.bool.isRequired,
   toggleAccountOptional: PropTypes.func.isRequired,
+  avatar: PropTypes.string,
+  name: PropTypes.string,
 };
 
 export default NavigationSmallDevice;

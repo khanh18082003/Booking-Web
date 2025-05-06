@@ -1,11 +1,16 @@
 import { useNavigate } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios"; // Import axios
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
+import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 
 const Register = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setPageTitle(PAGE_TITLES.REGISTER);
+  }, []);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -27,14 +32,11 @@ const Register = () => {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:8081/booking-api/v1/users/register",
-        {
-          email: formData.email,
-          password: formData.password,
-          confirm_password: formData.confirmPassword,
-        },
-      );
+      const response = await axios.post("/users/register", {
+        email: formData.email,
+        password: formData.password,
+        confirm_password: formData.confirmPassword,
+      });
 
       // Check if the response contains an error message
       const responseBody = response.data;

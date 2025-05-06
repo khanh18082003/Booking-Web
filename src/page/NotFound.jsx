@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 
 const NotFound = () => {
+  useEffect(() => {
+    setPageTitle(PAGE_TITLES.NOT_FOUND);
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 text-center">
       <h1 className="text-9xl font-bold text-blue-500">404</h1>

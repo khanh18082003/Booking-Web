@@ -1,6 +1,8 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import AuthContext from "../utils/AuthProvider";
+import axios from "../utils/axiosCustomize";
+import { useStore } from "../utils/AuthProvider";
+import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 
 const VerifyEmail = () => {
   const location = useLocation();
@@ -9,11 +11,14 @@ const VerifyEmail = () => {
   const inputRefs = useRef(Array(6).fill(null));
   const [canResend, setCanResend] = useState(false);
   const [resendTimeout, setResendTimeout] = useState(59);
-  const [isLoading, setIsLoading] = useState(false); // Loading state
   const [successMessage, setSuccessMessage] = useState(""); // Success message
   const navigate = useNavigate();
-  const { authState, setAuthState } = useContext(AuthContext); // Access the axios instance from AuthContext
-  const api = authState.api; // Extract the axios instance
+  const { store, startApiCall, finishApiCall } = useStore();
+
+  // Set page title
+  useEffect(() => {
+    setPageTitle(PAGE_TITLES.VERIFY_EMAIL);
+  }, []);
 
   // Focus first input on component mount
   useEffect(() => {
@@ -71,12 +76,12 @@ const VerifyEmail = () => {
     e.preventDefault();
 
     const verificationCodeString = verificationCode.join(""); // Combine the code array into a single string
-    setIsLoading(true); // Show loading UI
+    startApiCall(); // Start global loading state
     setSuccessMessage(""); // Clear any previous success message
 
     try {
       // Use the axios instance from AuthContext
-      const response = await api.post("/auth/verify-email", {
+      const response = await axios.post("/auth/verify-email", {
         code: verificationCodeString, // Pass the verification code
         email: email, // Pass the email
       });
@@ -87,7 +92,7 @@ const VerifyEmail = () => {
 
         // Automatically log the user in
         try {
-          const loginResponse = await api.post("/auth/login", {
+          const loginResponse = await axios.post("/auth/login", {
             email: email,
             password: password,
           });
@@ -96,11 +101,7 @@ const VerifyEmail = () => {
             localStorage.setItem(
               "accessToken",
               loginResponse.data.data.access_token,
-            ); // Store access token
-            setAuthState((prevState) => ({
-              ...prevState,
-              accessToken: loginResponse.data.access_token,
-            }));
+            );
 
             // Redirect to the home page
             navigate("/");
@@ -126,7 +127,7 @@ const VerifyEmail = () => {
         alert("An error occurred. Please try again later.");
       }
     } finally {
-      setIsLoading(false); // Hide loading UI
+      finishApiCall(); // End global loading state
     }
   };
 
@@ -135,10 +136,10 @@ const VerifyEmail = () => {
     if (!canResend) return;
 
     try {
-      setIsLoading(true); // Show loading UI during the API call
+      startApiCall(); // Start global loading state
 
       // Use the axios instance from AuthContext
-      const response = await api.post("/re-send-mail", {
+      const response = await axios.post("/re-send-mail", {
         email: email, // Pass the email to the API
       });
 
@@ -159,22 +160,13 @@ const VerifyEmail = () => {
         alert("An error occurred. Please try again later.");
       }
     } finally {
-      setIsLoading(false); // Hide loading UI
+      finishApiCall(); // End global loading state
     }
   };
 
   return (
     <div className="relative">
-      {/* Overlay for loading */}
-      {isLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white opacity-80">
-          <p className="text-center text-lg text-blue-500">Processing...</p>
-        </div>
-      )}
-
-      <div
-        className={`mx-auto mt-22 max-w-md ${isLoading ? "pointer-events-none" : ""}`}
-      >
+      <div className="mx-auto mt-22 max-w-md">
         <h2 className="mb-4 text-center text-2xl font-medium">
           Verify Your Email Address
         </h2>
@@ -214,16 +206,16 @@ const VerifyEmail = () => {
             type="submit"
             className={`w-full rounded py-3 font-medium ${
               verificationCode.every((digit) => /^[A-Z0-9]$/.test(digit)) &&
-              !isLoading
+              !store.apiLoading
                 ? "cursor-pointer bg-blue-500 text-white hover:bg-blue-600"
                 : "cursor-not-allowed bg-gray-200 text-gray-500"
             }`}
             disabled={
               !verificationCode.every((digit) => /^[A-Z0-9]$/.test(digit)) ||
-              isLoading
+              store.apiLoading
             }
           >
-            Verify Email
+            {store.apiLoading ? "Processing..." : "Verify Email"}
           </button>
         </form>
 
@@ -236,14 +228,24 @@ const VerifyEmail = () => {
           ) : (
             <button
               onClick={handleResend}
-              className="block text-sm font-medium text-blue-600 hover:underline"
+              disabled={store.apiLoading}
+              className={`block text-sm font-medium ${
+                store.apiLoading
+                  ? "cursor-not-allowed text-gray-400"
+                  : "text-blue-600 hover:underline"
+              }`}
             >
               Resend Verification Code
             </button>
           )}
           <button
             onClick={() => navigate("/login")}
-            className="block text-sm font-medium text-blue-600 hover:underline"
+            disabled={store.apiLoading}
+            className={`block text-sm font-medium ${
+              store.apiLoading
+                ? "cursor-not-allowed text-gray-400"
+                : "text-blue-600 hover:underline"
+            }`}
           >
             Back to Login
           </button>

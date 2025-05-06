@@ -8,12 +8,15 @@ import {
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import DateRange from "./DateRange";
-import { format } from "date-fns";
+import { format, parse, addDays } from "date-fns";
 import { vi } from "date-fns/locale";
 import NumberOfPersonBox from "./NumerOfPersonBox";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
+import PropTypes from "prop-types";
+import axiosInstance from "../../utils/axiosCustomize";
+import axios from "axios";
 
-const locations = [
+const initLocation = [
   {
     icon: <IoLocationOutline />,
     destination: "Bình Định",
@@ -52,37 +55,126 @@ const dayShortNames = {
 };
 
 const FormSearchBox = ({ showTitle }) => {
-  const [numbers, setNumbers] = useState({
-    adults: {
-      name: "Người lớn",
-      valueNow: 1,
-      valueMin: 1,
-      valueMax: 30,
-    },
-    children: {
-      name: "Trẻ em",
-      valueNow: 0,
-      valueMin: 0,
-      valueMax: 10,
-    },
-    rooms: {
-      name: "Phòng",
-      valueNow: 1,
-      valueMin: 1,
-      valueMax: 30,
-    },
-  });
-  const [date, setDate] = useState({
-    startDate: new Date(),
-    endDate: new Date(),
-    key: "selection",
-  });
-  const [inputChange, setInputChange] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [locations, setLocations] = useState(initLocation);
+
+  // Parse URL search parameters
+  const getInitialValues = () => {
+    const searchParams = new URLSearchParams(location.search);
+
+    const initialNumbers = {
+      adults: {
+        name: "Người lớn",
+        valueNow: searchParams.get("adults")
+          ? parseInt(searchParams.get("adults"))
+          : 1,
+        valueMin: 1,
+        valueMax: 30,
+      },
+      children: {
+        name: "Trẻ em",
+        valueNow: searchParams.get("children")
+          ? parseInt(searchParams.get("children"))
+          : 0,
+        valueMin: 0,
+        valueMax: 10,
+      },
+      rooms: {
+        name: "Phòng",
+        valueNow: searchParams.get("rooms")
+          ? parseInt(searchParams.get("rooms"))
+          : 1,
+        valueMin: 1,
+        valueMax: 30,
+      },
+    };
+
+    const startDate = searchParams.get("checkin")
+      ? parse(searchParams.get("checkin"), "yyyy-MM-dd", new Date())
+      : new Date();
+
+    const endDate = searchParams.get("checkout")
+      ? parse(searchParams.get("checkout"), "yyyy-MM-dd", new Date())
+      : addDays(startDate, 1);
+
+    const destination = searchParams.get("destination") || "";
+
+    return {
+      initialNumbers,
+      initialDate: { startDate, endDate, key: "selection" },
+      initialDestination: destination,
+    };
+  };
+
+  const { initialNumbers, initialDate, initialDestination } =
+    getInitialValues();
+
+  const [numbers, setNumbers] = useState(initialNumbers);
+  const [date, setDate] = useState(initialDate);
+  const [inputChange, setInputChange] = useState(initialDestination);
   const [isVisible, setIsVisible] = useState(false);
   const wrapperRef = useRef(null);
   const [openDate, setOpenDate] = useState(false);
   const [openPersonBox, setOpenPersonBox] = useState(false);
-  const navigate = useNavigate();
+
+  const GOOGLE_MAP_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY; // <-- Điền API key thật vào đây
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      if (inputChange.length === 0) {
+        setLocations(initLocation);
+        return;
+      }
+      try {
+        const response = await axiosInstance.get(`/locations`, {
+          params: {
+            location: inputChange,
+          },
+        });
+        console.log(response.data.data);
+        const parsed =
+          typeof response.data.data === "string"
+            ? JSON.parse(response.data.data)
+            : response.data.data;
+
+        const data = parsed.predictions.map((location) => ({
+          icon: <IoLocationOutline />,
+          destination: location.structured_formatting.main_text,
+          location: location.structured_formatting.secondary_text,
+        }));
+        setLocations(data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách địa điểm:", error);
+      }
+    };
+    fetchLocations();
+  }, [inputChange]);
+  // Hàm gọi Google Geocoding API lấy Lat/Lng
+  const fetchLatLngFromAddress = async (address) => {
+    try {
+      const res = await axios.get(
+        "https://maps.googleapis.com/maps/api/geocode/json",
+        {
+          params: {
+            address: address,
+            key: GOOGLE_MAP_API_KEY,
+          },
+        },
+      );
+
+      if (res.data.status === "OK" && res.data.results.length > 0) {
+        const location = res.data.results[0].geometry.location;
+        return { lat: location.lat, lng: location.lng };
+      } else {
+        console.error("Không tìm thấy địa chỉ:", res.data.status);
+        return null;
+      }
+    } catch (error) {
+      console.error("Lỗi gọi Geocoding API:", error);
+      return null;
+    }
+  };
 
   const handleChange = (ranges) => {
     setDate(ranges.selection);
@@ -142,18 +234,57 @@ const FormSearchBox = ({ showTitle }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Ngăn reload trang
-    const formData = new FormData(e.target);
-    const destination = formData.get("destination");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const destination = inputChange;
     const startDate = format(date.startDate, "yyyy-MM-dd");
     const endDate = format(date.endDate, "yyyy-MM-dd");
     const adults = numbers.adults.valueNow;
     const children = numbers.children.valueNow;
     const rooms = numbers.rooms.valueNow;
-    navigate(
-      `/searchresults?destination=${destination}&checkin=${startDate}&checkout=${endDate}&group_adults=${adults}&group_children=${children}&no_rooms=${rooms}`,
-    );
+
+    console.log("Destination:", destination);
+    const latlng = await fetchLatLngFromAddress(destination);
+    console.log(latlng);
+    if (!latlng) {
+      alert("Không tìm thấy vị trí, vui lòng thử lại!");
+      return;
+    }
+
+    try {
+      // Call API tìm kiếm
+      const response = await axiosInstance.get(`/properties/search`, {
+        params: {
+          latitude: latlng.lat,
+          longitude: latlng.lng,
+          start_date: startDate,
+          end_date: endDate,
+          adults,
+          children,
+          rooms,
+        },
+      });
+
+      // Navigate without location data in URL
+      navigate(
+        `/searchresults?destination=${encodeURIComponent(destination)}&checkin=${startDate}&checkout=${endDate}&adults=${adults}&children=${children}&rooms=${rooms}`,
+        {
+          state: {
+            propertiesList: response.data.data.data,
+            total: response.data.data.meta.total,
+            location: {
+              lat: latlng.lat,
+              lng: latlng.lng,
+            },
+            destination: destination,
+          },
+        },
+      );
+    } catch (error) {
+      console.error("Lỗi tìm kiếm:", error);
+      alert("Có lỗi khi tìm kiếm chỗ nghỉ!");
+    }
   };
 
   const handleChooseItemBox = (e) => {
@@ -324,6 +455,9 @@ const FormSearchBox = ({ showTitle }) => {
       </div>
     </div>
   );
+};
+FormSearchBox.propTypes = {
+  showTitle: PropTypes.bool,
 };
 
 export default FormSearchBox;

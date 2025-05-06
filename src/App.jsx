@@ -10,6 +10,8 @@ import Properties from "./page/Properties";
 import AuthenticationLayout from "./components/layout/AuthenticationLayout";
 import VerifyEmail from "./page/VerifyEmail";
 import NotFound from "./page/NotFound";
+import Profile from "./page/Profile";
+import Personal from "./page/Personal";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -39,7 +41,9 @@ function App() {
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Home />} />
-          <Route path="/searchresults" element={<Properties />} />
+          <Route path="myaccount" element={<Profile />} />
+          <Route path="myaccount/personal" element={<Personal />} />
+          <Route path="searchresults" element={<Properties />} />
           <Route path="*" element={<NotFound />} />
         </Route>
         <Route element={<AuthenticationLayout />}>

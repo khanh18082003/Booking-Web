@@ -1,32 +1,36 @@
 import PropTypes from "prop-types";
-import defaultAvatar from "../../assets/default-avatar.avif";
+import { memo } from "react";
+import { VscAccount } from "react-icons/vsc";
 
-const Account = ({ name, avatar, toggleAccountOptional }) => {
+// Using React.memo to prevent unnecessary re-renders
+const Account = memo(({ name, avatar, toggleAccountOptional }) => {
   return (
     <div
-      className="account-button flex min-h-[48px] min-w-[48px] cursor-pointer items-center justify-center rounded-[4px] px-3 py-2 duration-200 hover:bg-white/10"
-      onClick={toggleAccountOptional} // Handle click event
+      onClick={toggleAccountOptional}
+      className="account-button group relative flex cursor-pointer items-center gap-2 rounded-[4px] p-2 hover:bg-white/10"
     >
-      {/* Avatar */}
-      <img
-        src={avatar || defaultAvatar} // Use default avatar if none is provided
-        alt="User Avatar"
-        className="h-8 w-8 rounded-full border border-gray-300"
-      />
-      {/* Name (only show on larger screens) */}
-      <div className="ml-2 hidden text-white lg:block">
-        <p className="text-sm font-medium">
-          {name} {/* Default to "Your account" if name is not set */}
-        </p>
-      </div>
+      <span className="min-h-[24px] min-w-[24px] rounded-full">
+        {avatar ? (
+          <img
+            src={avatar}
+            alt="Avatar"
+            className="h-8 w-8 rounded-full border border-gray-300"
+          />
+        ) : (
+          <VscAccount className="h-full w-full font-medium" />
+        )}
+      </span>
+      <span className="text-sm text-white">{name}</span>
     </div>
   );
-};
+});
 
 Account.propTypes = {
-  name: PropTypes.string,
+  name: PropTypes.string.isRequired,
   avatar: PropTypes.string,
-  toggleAccountOptional: PropTypes.func.isRequired, // Add prop type for toggle function
+  toggleAccountOptional: PropTypes.func.isRequired,
 };
+
+Account.displayName = "Account"; // Adding display name for better debugging
 
 export default Account;

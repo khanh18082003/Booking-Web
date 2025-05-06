@@ -1,23 +1,57 @@
-import { Link } from "react-router";
+import PropertiesHorizontalItem from "./PropertiesHorizontalItem";
+import { useState, useRef, useEffect } from "react";
+import PropTypes from "prop-types";
+import PropertiesVerticalItem from "./PropertiesVerticalItem";
+import { BsGrid3X3Gap } from "react-icons/bs";
+import { FaListUl } from "react-icons/fa";
+import { RiArrowDropDownLine, RiArrowUpDownFill } from "react-icons/ri";
 
-const PropertiesList = () => {
-  const properties = [
-    {
-      id: 1,
-      name: "ibis Styles Vung Tau",
-      location: "Back Beach, Vung Tau",
-      rating: 8.1,
-      reviews: 1990,
-      price: "VND 1,660,000",
-      image:
-        "https://cf.bstatic.com/xdata/images/hotel/square240/519498616.webp?k=f57b2f30dbdb4a37f096c9e4846cd3a7dfea635e6bc9f63892db7409a2f8b163&o=",
-    },
-    // Add more properties as needed
+const VIEW_MODE_KEY = "properties-view-mode";
+
+const PropertiesList = (props) => {
+  const [isHorizontal, setIsHorizontal] = useState(() => {
+    // Try to get saved preference from localStorage, default to true if not found
+    try {
+      const savedMode = localStorage.getItem(VIEW_MODE_KEY);
+      return savedMode === null ? true : savedMode === "horizontal";
+    } catch (error) {
+      console.error("Error accessing localStorage:", error);
+      return true;
+    }
+  });
+
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [selectedSort, setSelectedSort] = useState(
+    "Lựa chọn hàng đầu của chúng tôi",
+  );
+  const sortDropdownRef = useRef(null);
+
+  // Save view mode to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        VIEW_MODE_KEY,
+        isHorizontal ? "horizontal" : "vertical",
+      );
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+    }
+  }, [isHorizontal]);
+
+  const sortOptions = [
+    "Lựa chọn hàng đầu của chúng tôi",
+    "Ưu tiên nhà & căn hộ",
+    "Giá (ưu tiên thấp nhất)",
+    "Giá (ưu tiên cao nhất)",
+    "Được đánh giá tốt nhất và có giá thấp nhất",
+    "Xếp hạng chỗ nghỉ (cao đến thấp)",
+    "Xếp hạng chỗ nghỉ (thấp đến cao)",
+    "Xếp hạng chỗ nghỉ và giá",
   ];
 
   const getRatingText = (rating) => {
     switch (true) {
-      case rating >= 9.0:
+      case rating >= 9.5:
         return "Xuất sắc";
       case rating >= 8.0:
         return "Rất tốt";
@@ -28,100 +62,140 @@ const PropertiesList = () => {
     }
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(event.target)
+      ) {
+        setShowSortDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSortSelect = (option) => {
+    setSelectedSort(option);
+    setShowSortDropdown(false);
+  };
+
+  const toggleViewMode = (horizontal) => {
+    setIsHorizontal(horizontal);
+  };
+
   return (
     <>
       {/* Right Column: Properties List */}
       <div className="w-full lg:flex-auto lg:shrink-1 lg:grow">
-        <h2 className="mb-3 text-2xl font-bold">
-          Việt Nam: tìm thấy 17.713 chỗ nghỉ
-        </h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Sắp xếp theo: Lựa chọn hàng đầu của chúng tôi
-        </p>
+        <div className="flex items-center justify-between p-3">
+          <h2 className="mb-3 text-2xl font-bold">
+            {`${props.destination.split(", ")[0]}: tìm thấy ${props.total ? props.total : 0} chỗ nghỉ`}
+          </h2>
 
-        {/* Properties List */}
-        {properties.map((property) => (
-          <div
-            key={property.id}
-            className="my-4 rounded-lg border border-[#a3d7fc] bg-[#f0f6ff] p-4 shadow-[0_0_8px_#a3d7fc]"
-          >
-            <div className="flex">
-              <div className="w-[240px]">
-                <Link to={`/properties/${property.id}`} target="_blank">
-                  <img
-                    src={property.image}
-                    alt={property.name}
-                    className="block rounded-lg object-cover"
-                  />
-                </Link>
-              </div>
-              <div className="ml-4 flex-1 shrink grow">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-6">
-                    <div className="flex flex-auto shrink grow flex-col gap-1">
-                      <div className="pt-2">
-                        <Link to={`/properties/${property.id}`} target="_blank">
-                          <h3 className="text-xl font-semibold text-third hover:text-black">
-                            {property.name}
-                          </h3>
-                        </Link>
-                      </div>
-                      <div className="text-[12px]">
-                        <Link to={`/properties/${property.id}`} target="_blank">
-                          <span className="cursor-pointer text-third">
-                            <span className="mr-2.5 underline">
-                              {property.location}
-                            </span>
-                            <span className="underline">Xem trên bản đồ</span>
-                          </span>
-                        </Link>
-                        <span className="ml-2.5">Cách trung tâm 0,6km</span>
-                      </div>
-                    </div>
-                    <div className="mt-1 flex items-center">
-                      <Link to={`/properties/${property.id}`} target="_blank">
-                        <div className="flex items-center gap-2">
-                          <div className="text-end text-sm">
-                            <div className="text-lg leading-[20px] font-bold">
-                              {getRatingText(property.rating)}
-                            </div>
-                            <div className="leading-[18px] text-gray-600">
-                              {property.reviews} đánh giá
-                            </div>
-                          </div>
-                          <div className="flex h-8 w-8 items-center justify-center rounded-tl-[6px] rounded-tr-[6px] rounded-br-[6px] bg-primary">
-                            <span className="text-[16px] font-bold text-white">
-                              {property.rating}
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Phòng Tiêu Chuẩn 2 Giường Đơn <br />1 đêm, 2 người lớn
-                      </p>
-                    </div>
-                    <div className="text-end">
-                      <p className="mt-2 text-lg font-bold">{property.price}</p>
-                      <p className="text-sm text-gray-500">
-                        +VND 222.440 thuế và phí
-                      </p>
-                      <button className="mt-2 rounded bg-blue-500 px-4 py-2 text-white">
-                        Xem chỗ trống
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Improved toggle switch */}
+          <div className="hidden self-end sm:mb-0 lg:block">
+            <div className="flex overflow-hidden rounded-md border border-gray-300">
+              <button
+                className={`flex items-center gap-1.5 px-4 py-2 transition-colors duration-200 ${
+                  isHorizontal
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-white text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => toggleViewMode(true)}
+                aria-pressed={isHorizontal}
+                aria-label="View in horizontal mode"
+              >
+                <BsGrid3X3Gap size={14} />
+                <span className="text-sm font-medium">Xem ngang</span>
+              </button>
+              <button
+                className={`flex items-center gap-1.5 border-l border-gray-300 px-4 py-2 transition-colors duration-200 ${
+                  !isHorizontal
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-white text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => toggleViewMode(false)}
+                aria-pressed={!isHorizontal}
+                aria-label="View in vertical mode"
+              >
+                <FaListUl size={14} />
+                <span className="text-sm font-medium">Xem dọc</span>
+              </button>
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* Improved Sort Dropdown Component */}
+        <div
+          className="relative mb-3 hidden cursor-pointer lg:block"
+          ref={sortDropdownRef}
+        >
+          <button
+            className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+            onClick={() => setShowSortDropdown(!showSortDropdown)}
+          >
+            <RiArrowUpDownFill className="text-gray-500" />
+            <span>Sắp xếp theo: {selectedSort}</span>
+            <RiArrowDropDownLine
+              className={`text-xl transition-transform ${showSortDropdown ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {/* Dropdown Menu */}
+          {showSortDropdown && (
+            <div className="absolute top-full left-0 z-20 mt-1 w-72 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
+              {sortOptions.map((option, index) => (
+                <div
+                  key={index}
+                  className={`cursor-pointer px-4 py-3 text-sm hover:bg-blue-50 ${selectedSort === option ? "bg-blue-100" : ""}`}
+                  onClick={() => handleSortSelect(option)}
+                >
+                  {option}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Properties List with proper className based on view mode */}
+        <div
+          className={
+            !isHorizontal
+              ? "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+              : "space-y-4"
+          }
+        >
+          {props.propertiesList.map((property) =>
+            isHorizontal ? (
+              <PropertiesHorizontalItem
+                key={property.id}
+                property={property}
+                getRatingText={getRatingText}
+              />
+            ) : (
+              <PropertiesVerticalItem
+                key={property.id}
+                property={property}
+                getRatingText={getRatingText}
+              />
+            ),
+          )}
+        </div>
       </div>
     </>
   );
+};
+PropertiesList.propTypes = {
+  propertiesList: PropTypes.array.isRequired,
+  destination: PropTypes.string.isRequired,
+  meta: PropTypes.shape({
+    total: PropTypes.number.isRequired,
+  }).isRequired,
 };
 
 export default PropertiesList;
