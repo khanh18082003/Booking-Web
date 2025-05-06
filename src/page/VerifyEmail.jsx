@@ -75,22 +75,26 @@ const VerifyEmail = () => {
   const handleVerify = async (e) => {
     e.preventDefault();
 
-    const verificationCodeString = verificationCode.join(""); // Combine the code array into a single string
-    startApiCall(); // Start global loading state
-    setSuccessMessage(""); // Clear any previous success message
+    const verificationCodeString = verificationCode.join("");
+    startApiCall();
+    setSuccessMessage("");
 
     try {
-      // Use the axios instance from AuthContext
       const response = await axios.post("/auth/verify-email", {
-        code: verificationCodeString, // Pass the verification code
-        email: email, // Pass the email
+        code: verificationCodeString,
+        email: email,
       });
 
-      // Handle success response
       if (response.data.code === "M000") {
-        setSuccessMessage("Email verified successfully!"); // Show success message
+        setSuccessMessage("Email verified successfully!");
 
-        // Automatically log the user in
+        // Nếu đến từ forgot-password, chuyển hướng đến reset-password
+        if (!password) {
+          navigate("/reset-password", { state: { email } });
+          return;
+        }
+
+        // Nếu có mật khẩu (tức là từ đăng ký), thực hiện đăng nhập
         try {
           const loginResponse = await axios.post("/auth/login", {
             email: email,
@@ -102,8 +106,6 @@ const VerifyEmail = () => {
               "accessToken",
               loginResponse.data.data.access_token,
             );
-
-            // Redirect to the home page
             navigate("/");
           } else {
             alert(`Login failed: ${loginResponse.data.message}`);
@@ -127,7 +129,7 @@ const VerifyEmail = () => {
         alert("An error occurred. Please try again later.");
       }
     } finally {
-      finishApiCall(); // End global loading state
+      finishApiCall();
     }
   };
 

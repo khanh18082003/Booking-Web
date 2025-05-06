@@ -12,6 +12,8 @@ import VerifyEmail from "./page/VerifyEmail";
 import NotFound from "./page/NotFound";
 import Profile from "./page/Profile";
 import Personal from "./page/Personal";
+import ForgotPassword from "./page/ForgotPassword";
+import ResetPassword from "./page/ResetPassword";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -50,6 +52,8 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="verify-email" element={<VerifyEmail />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
         </Route>
       </Routes>
     </BrowserRouter>
