@@ -1,7 +1,9 @@
+import { useStore } from "../../utils/AuthProvider";
 import FormSearchBox from "../FormSearchBox/FormSearchBox";
 import PropTypes from "prop-types";
 
 const Banner = ({ showTitle = true }) => {
+  const { store, setStore } = useStore();
   return (
     <div
       className={`relative z-[1000] w-full bg-primary text-white ${showTitle ? "mb-[96px]" : "mb-[96px] max-lg:mb-[200px]"}`}
@@ -17,7 +19,9 @@ const Banner = ({ showTitle = true }) => {
                 data-aos-delay="100"
                 className="text-5xl leading-16 font-extrabold"
               >
-                Tìm chỗ nghỉ tiếp theo
+                {store.userProfile?.first_name
+                  ? `${store.userProfile?.first_name}, kế tiếp bạn sẽ du lịch đến đâu?`
+                  : "Tìm chỗ nghỉ tiếp theo"}
               </h1>
               <p
                 data-aos="fade-up"

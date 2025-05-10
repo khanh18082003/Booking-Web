@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Banner from "../components/layout/Banner";
 import PropertiesList from "../components/PropertiesList/PropertiesList";
 import { TbArrowsSort } from "react-icons/tb";
@@ -5,8 +6,19 @@ import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import { IoMapOutline } from "react-icons/io5";
 import PropertiesFilter from "../components/PropertiesList/PropertiesFilter";
 import PropertiesMap from "../components/PropertiesList/PropertiesMap";
+import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
+import { useLocation } from "react-router-dom";
 
 const Properties = () => {
+  const location = useLocation();
+  const total = location.state?.total || null;
+  const propertiesList = location.state?.propertiesList || null;
+  const locationData = location.state?.location || null;
+  const destination = location.state?.destination || null;
+  useEffect(() => {
+    setPageTitle(PAGE_TITLES.PROPERTIES);
+  }, []);
+
   return (
     <>
       <Banner showTitle={false} />
@@ -51,10 +63,14 @@ const Properties = () => {
         </div>
         {/* Sort, Filter, Map > 768px */}
         <div className="mr-4 hidden flex-col lg:block lg:w-[30%]">
-          <PropertiesMap />
+          <PropertiesMap location={locationData} />
           <PropertiesFilter />
         </div>
-        <PropertiesList />
+        <PropertiesList
+          propertiesList={propertiesList}
+          destination={destination}
+          total={total}
+        />
       </div>
     </>
   );

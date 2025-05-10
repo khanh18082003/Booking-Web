@@ -1,57 +1,115 @@
-import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
+import { memo, useState, useCallback } from "react";
+import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import { IoLocationOutline } from "react-icons/io5";
 
-const PropertiesMap = () => {
-  // Google Map configuration
-  const containerStyle = {
-    width: "100%",
-    height: "170px",
-  };
+// Define these outside component to prevent recreations
+const containerStyle = {
+  width: "100%",
+  height: "170px",
+};
 
-  const center = {
-    lat: 10.346, // Example coordinates for Vung Tau, Vietnam
-    lng: 107.084,
-  };
-  const { isLoaded } = useJsApiLoader({
+const defaultCenter = {
+  lat: 10.346,
+  lng: 107.084,
+};
+
+const mapOptions = {
+  zoomControl: false,
+  streetViewControl: false,
+  mapTypeControl: false,
+  fullscreenControl: false,
+};
+
+// Using memo for performance optimization
+const PropertiesMap = memo(({ location = defaultCenter, properties = [] }) => {
+  const [map, setMap] = useState(null);
+
+  // Load Google Maps API
+  const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
-    googleMapsApiKey: "AIzaSyBIFd57sMvn5ZJLfk4-NTQLxST6DQYfwPw",
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
   });
+
+  // Memoize callbacks
+  const onLoad = useCallback((map) => {
+    setMap(map);
+  }, []);
+
+  const onUnmount = useCallback(() => {
+    setMap(null);
+  }, []);
+
+  // Error handling
+  if (loadError) {
+    return (
+      <div className="flex h-[170px] items-center justify-center rounded-lg bg-gray-100">
+        <p className="text-gray-500">Error loading maps</p>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (!isLoaded) {
+    return (
+      <div className="flex h-[170px] items-center justify-center rounded-lg bg-gray-100">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative mb-1 overflow-hidden rounded-lg">
-      {isLoaded ? (
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={center}
-          zoom={14}
-          options={{
-            zoomControl: false,
-          }}
-        >
-          {/* Child components, such as markers, info windows, etc. */}
-          <></>
-        </GoogleMap>
-      ) : (
-        <div>Loading...</div>
-      )}
-      {/* Map controls similar to booking.com */}
-      <div className="absolute bottom-1/5 left-1/2 z-10 flex w-full translate-x-[-50%] justify-center">
+      <GoogleMap
+        mapContainerStyle={containerStyle}
+        center={location}
+        zoom={14}
+        options={mapOptions}
+        onLoad={onLoad}
+        onUnmount={onUnmount}
+      >
+        {/* Main location marker */}
+        <Marker position={location} />
+
+        {/* Property markers if available */}
+        {properties.map(
+          (property) =>
+            property.location && (
+              <Marker
+                key={property.id}
+                position={property.location}
+                title={property.name}
+              />
+            ),
+        )}
+      </GoogleMap>
+
+      {/* Map zoom controls */}
+      <div className="absolute right-2 bottom-2 z-10">
         <button
-          className="flex cursor-pointer items-center rounded-sm bg-blue-600 px-3 py-1 text-sm leading-7 whitespace-nowrap text-white"
-          onClick={() =>
-            window.open(
-              `https://www.google.com/maps/search/?api=1&query=${center.lat},${center.lng}`,
-              "_blank",
-            )
-          }
+          className="mb-1 flex h-8 w-8 items-center justify-center rounded bg-white text-gray-700 shadow-md hover:bg-gray-100"
+          onClick={() => map?.setZoom((map.getZoom() || 14) + 1)}
+          aria-label="Zoom in"
         >
-          <span className="material-icons mr-1 text-sm">
-            <IoLocationOutline />
-          </span>
-          Hiển thị trên bản đồ
+          +
         </button>
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded bg-white text-gray-700 shadow-md hover:bg-gray-100"
+          onClick={() => map?.setZoom((map.getZoom() || 14) - 1)}
+          aria-label="Zoom out"
+        >
+          -
+        </button>
+      </div>
+
+      {/* Location indicator */}
+      <div className="absolute bottom-2 left-2 z-10 flex items-center rounded bg-white/90 px-2 py-1 text-sm text-gray-700 shadow-sm">
+        <IoLocationOutline className="mr-1" />
+        <span>Map view</span>
       </div>
     </div>
   );
-};
+});
+
+PropertiesMap.displayName = "PropertiesMap";
 
 export default PropertiesMap;

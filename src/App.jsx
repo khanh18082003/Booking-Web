@@ -8,6 +8,13 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import Properties from "./page/Properties";
 import RoomDetail from "./page/RoomDetail";
+import AuthenticationLayout from "./components/layout/AuthenticationLayout";
+import VerifyEmail from "./page/VerifyEmail";
+import NotFound from "./page/NotFound";
+import Profile from "./page/Profile";
+import Personal from "./page/Personal";
+import ForgotPassword from "./page/ForgotPassword";
+import ResetPassword from "./page/ResetPassword";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -37,12 +44,19 @@ function App() {
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Home />} />
-          <Route path="/searchresults" element={<Properties />} />
           <Route path="/roomdetail" element={<RoomDetail />} />
-          <Route path="*" element={<h1>Not Found</h1>} />
+          <Route path="myaccount" element={<Profile />} />
+          <Route path="myaccount/personal" element={<Personal />} />
+          <Route path="searchresults" element={<Properties />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
+        <Route element={<AuthenticationLayout />}>
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+          <Route path="verify-email" element={<VerifyEmail />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
