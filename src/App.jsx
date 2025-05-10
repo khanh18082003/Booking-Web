@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import Properties from "./page/Properties";
+import RoomDetail from "./page/RoomDetail";
 import AuthenticationLayout from "./components/layout/AuthenticationLayout";
 import VerifyEmail from "./page/VerifyEmail";
 import NotFound from "./page/NotFound";
@@ -43,6 +44,7 @@ function App() {
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Home />} />
+          <Route path="/roomdetail" element={<RoomDetail />} />
           <Route path="myaccount" element={<Profile />} />
           <Route path="myaccount/personal" element={<Personal />} />
           <Route path="searchresults" element={<Properties />} />
