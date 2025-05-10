@@ -8,7 +8,18 @@ import { FiHeart } from "react-icons/fi";
 const PropertiesHorizontalItem = ({ property, getRatingText }) => {
   // formatting VND price
   const formatPrice = (price) => {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    if (!price && price !== 0) return "VND 0";
+
+    // Convert to number if it's a string
+    const numericPrice = typeof price === "string" ? parseFloat(price) : price;
+
+    // Format with thousand separators (without currency symbol)
+    const formattedNumber = new Intl.NumberFormat("vi-VN", {
+      maximumFractionDigits: 0,
+    }).format(numericPrice);
+
+    // Return with VND at the beginning
+    return `VND ${formattedNumber}`;
   };
   return (
     <div className="my-4 overflow-hidden rounded-xl border border-[#e7e7e7] bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
@@ -34,7 +45,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
         </div>
 
         {/* Content section */}
-        <div className="ml-4 flex flex-1 flex-col py-1">
+        <div className="ml-4 flex flex-1 flex-col gap-1.5 py-1">
           {/* Top section */}
           <div className="flex items-start justify-between">
             {/* Hotel name and location */}
@@ -92,7 +103,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
                   {getRatingText(property.rating)}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {property.reviews} đánh giá
+                  {property.total_rating} đánh giá
                 </div>
               </div>
               <div className="flex h-8 w-8 items-center justify-center rounded-tl-md rounded-tr-md rounded-br-md bg-[#003b95]">
@@ -103,8 +114,11 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="my-1 border-t border-gray-100"></div>
+          <div className="flex flex-col items-start gap-1 text-[12px]">
+            <span className="rounded bg-[#008234] px-1 py-[1px] text-[12px] text-white">
+              Ưu đãi mùa du lịch
+            </span>
+          </div>
 
           {/* Bottom section with room details and price */}
           <div className="flex justify-between pt-1">
@@ -163,12 +177,12 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
               <div className="text-right">
                 <div className="text-xs text-gray-500">
                   {property.nights} đêm, {property.adults} người lớn
-                  {`${property.children && `, ${property.children} trẻ em`}`}
+                  {`${property.children !== 0 && `, ${property.children} trẻ em`}`}
                 </div>
 
                 <div className="flex items-center justify-end">
                   <div className="text-xl font-bold">
-                    VND {formatPrice(property.total_price)}
+                    {formatPrice(property.total_price)}
                   </div>
                   <BsInfoCircle className="ml-1 text-gray-400" size={14} />
                 </div>

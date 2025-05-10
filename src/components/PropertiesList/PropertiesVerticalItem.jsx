@@ -1,15 +1,31 @@
 import PropTypes from "prop-types";
+import { BsInfoCircle } from "react-icons/bs";
 import { FaBed } from "react-icons/fa";
 import { Link } from "react-router";
 
 const PropertiesVerticalItem = ({ property, getRatingText }) => {
+  // formatting VND price
+  const formatPrice = (price) => {
+    if (!price && price !== 0) return "VND 0";
+
+    // Convert to number if it's a string
+    const numericPrice = typeof price === "string" ? parseFloat(price) : price;
+
+    // Format with thousand separators (without currency symbol)
+    const formattedNumber = new Intl.NumberFormat("vi-VN", {
+      maximumFractionDigits: 0,
+    }).format(numericPrice);
+
+    // Return with VND at the beginning
+    return `VND ${formattedNumber}`;
+  };
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md">
       {/* Image container with wishlist button */}
       <div className="relative overflow-hidden">
         <img
-          src={property?.image}
-          alt={property?.name}
+          src={property.image}
+          alt={property.properties_name}
           className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
         />
         <button className="absolute top-2 right-2 rounded-full bg-white p-2 text-gray-600 hover:bg-gray-100">
@@ -31,11 +47,11 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
       {/* Content section */}
       <div className="flex-1 p-4">
         {/* Header with name and rating */}
-        <div className="flex h-full flex-col items-center gap-2">
-          <div className="flex w-full flex-col">
+        <div className="flex h-full flex-col items-center gap-1">
+          <div className="flex w-full flex-col border-b border-gray-200 pb-2">
             <div className="mb-2 flex items-start justify-between">
-              <h3 className="flex-1 text-lg font-bold text-blue-600">
-                {property?.name}
+              <h3 className="flex-1 text-lg font-bold text-blue-600 hover:text-black active:text-[#b10a0a]">
+                {property.properties_name}
               </h3>
             </div>
             <div className="mb-2 flex w-full items-center">
@@ -46,32 +62,31 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
                   </span>
                 </div>
               </div>
-              <div className="ml-2 flex items-center text-sm text-gray-600">
+              <div className="ml-2 flex items-center text-sm">
                 <span className="font-medium">
                   {getRatingText(property.rating)}
                 </span>
-                <span className="mx-1"> · </span>
-                <span>{property?.reviews} đánh giá</span>
               </div>
             </div>
-            <div className="text-[12px]">
+            <div className="flex flex-col items-start gap-1 text-[12px]">
               <Link to={`/properties/`} target="_blank">
                 <span className="text-[12px] text-third">
-                  <span className="underline">{property?.location}</span>
-                  <span className="px-1"></span>
+                  <span className="underline">{`${property.district} ${property.district && ","} ${property.city}`}</span>
+                  <span className="px-2"></span>
                   <span className="underline">Xem trên bản đồ</span>
                 </span>
               </Link>
               <span>
-                <span className="px-1"></span>
-                <span>Cách trung tâm {property?.centre}</span>
-              </span>
-              {property?.beachDistance && (
                 <span>
-                  <span className="px-1"></span>
-                  <span>Cách bãi biển {property?.beachDistance}</span>
+                  Cách trung tâm{" "}
+                  {property.distance > 1000
+                    ? `${(property.distance / 1000).toFixed(1)} km`
+                    : `${property.distance} m`}
                 </span>
-              )}
+              </span>
+              <span className="rounded bg-[#008234] px-1 py-[1px] text-[12px] text-white">
+                Ưu đãi mùa du lịch
+              </span>
             </div>
           </div>
 
@@ -79,17 +94,63 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
           <div className="flex w-full flex-1 shrink grow flex-col">
             {/* Accommodation type */}
             <div className="flex-1">
+              <span className="rounded-[6px] border-1 px-1 py-[1px] text-[12px] font-light">
+                <span>Được đề xuất cho nhóm của bạn</span>
+              </span>
               <div className="mb-3">
-                <h4 className="font-medium">{property?.accommodation}</h4>
-                {property?.details && (
-                  <p className="text-sm text-gray-600">{property?.details}</p>
-                )}
-                {property?.beds && (
-                  <div className="mt-1 flex items-center gap-1 text-sm text-gray-600">
-                    <FaBed />
-                    <span>{property?.beds}</span>
-                  </div>
-                )}
+                <div>
+                  {property.accommodations.map((accommodation) => (
+                    <div key={accommodation.accommodation_id}>
+                      <h4>
+                        {property.accommodations.length > 1 ? (
+                          <>
+                            <span className="text-[14px]">
+                              {accommodation.suggested_quantity}×
+                            </span>
+                            <span className="text-[14px] font-semibold">
+                              {accommodation.accommodation_name}
+                            </span>
+                          </>
+                        ) : (
+                          <span>{accommodation.accommodation_name}</span>
+                        )}
+                      </h4>
+                      <div className="mt-1 ml-2 flex items-center text-[13px]">
+                        {accommodation.bed_names &&
+                        accommodation.bed_names.length > 1 ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xl">
+                              <FaBed />
+                            </span>
+                            <span>
+                              {accommodation.total_beds} giường (
+                              {accommodation.bed_names.map((bed, index) => (
+                                <span key={index}>
+                                  {bed}
+                                  {index < accommodation.bed_names.length - 1
+                                    ? ", "
+                                    : ""}
+                                </span>
+                              ))}
+                              )
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xl">
+                              <FaBed />
+                            </span>
+                            <span>
+                              {accommodation.total_beds}{" "}
+                              {accommodation.bed_names &&
+                                accommodation.bed_names[0]}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Features (optional) */}
@@ -98,46 +159,25 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
                   Bữa sáng miễn phí
                 </div>
               )}
-
-              {/* Payment options */}
-              {property?.paymentOption && (
-                <div className="mb-2 flex items-center gap-1 text-sm text-green-600">
-                  <svg
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0-1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z" />
-                    <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
-                  </svg>
-                  <span>{property?.paymentOption}</span>
-                </div>
-              )}
-
-              {/* Availability info */}
-              {property?.availability && (
-                <div className="mt-1 mb-2 text-sm text-red-600">
-                  Chỉ còn {property?.availability}{" "}
-                  {property?.accommodationType === "room" ? "phòng" : "căn"} với
-                  giá này trên trang của chúng tôi
-                </div>
-              )}
             </div>
 
             {/* Bottom section with CTA and Price */}
             <div className="mt-4 w-full items-end justify-between">
               {/* Price information - styled at bottom right */}
               <div className="text-right">
-                {property?.oldPrice && (
-                  <div className="text-sm text-gray-500 line-through">
-                    {property?.oldPrice}
-                  </div>
-                )}
                 <div className="flex flex-col">
-                  <span className="text-xl font-bold text-gray-900">
-                    {property?.price}
-                  </span>
+                  <div className="text-xs text-gray-500">
+                    {property.nights} đêm, {property.adults} người lớn
+                    {property.children !== 0
+                      ? `, ${property.children} trẻ em`
+                      : ""}
+                  </div>
+                  <div className="flex items-center justify-end">
+                    <div className="text-xl font-bold">
+                      {formatPrice(property.total_price)}
+                    </div>
+                    <BsInfoCircle className="ml-1 text-gray-400" size={14} />
+                  </div>
                   <span className="text-xs text-gray-500">
                     {property?.taxAndFee}
                   </span>
@@ -149,30 +189,6 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
       </div>
     </div>
   );
-};
-
-PropertiesVerticalItem.propTypes = {
-  property: PropTypes.shape({
-    image: PropTypes.string,
-    name: PropTypes.string,
-    featuredTag: PropTypes.string,
-    rating: PropTypes.number,
-    reviews: PropTypes.number,
-    location: PropTypes.string,
-    centre: PropTypes.string,
-    beachDistance: PropTypes.string,
-    accommodationType: PropTypes.string,
-    accommodation: PropTypes.string,
-    details: PropTypes.string,
-    beds: PropTypes.number,
-    breakfastIncluded: PropTypes.bool,
-    paymentOption: PropTypes.string,
-    availability: PropTypes.number,
-    oldPrice: PropTypes.string,
-    price: PropTypes.string,
-    taxAndFee: PropTypes.string,
-  }).isRequired,
-  getRatingText: PropTypes.func.isRequired,
 };
 
 export default PropertiesVerticalItem;

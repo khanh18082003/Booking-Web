@@ -1,6 +1,6 @@
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import axios from "../utils/axiosCustomize";
 import { useState, useEffect } from "react";
 import { BsEyeSlashFill } from "react-icons/bs";
@@ -41,7 +41,7 @@ const Login = () => {
     try {
       // Then make the actual API call
       startApiCall(); // Start loading state
-      console.log("Loading started.");
+
       // Simulate a delay of 10 seconds
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -51,16 +51,6 @@ const Login = () => {
       });
 
       const responseBody = response.data;
-
-      if (responseBody.code === "M0404") {
-        navigate("/verify-email", {
-          state: {
-            email: formData.email,
-            password: formData.password,
-          },
-        });
-        return;
-      }
 
       if (responseBody.code !== "M000") {
         setError(responseBody.message); // Set error message
@@ -74,7 +64,18 @@ const Login = () => {
       navigate("/");
     } catch (error) {
       if (
-        error.response?.status === 401 ||
+        error.response.status === 401 &&
+        error.response?.data.code === "M0404"
+      ) {
+        navigate("/verify-email", {
+          state: {
+            email: formData.email,
+            password: formData.password,
+          },
+        });
+        return;
+      } else if (
+        error.response?.status === 401 &&
         error.response?.data?.code === "M0401"
       ) {
         setError("Email or password is incorrect."); // Set error message
@@ -171,9 +172,9 @@ const Login = () => {
           </button>
         </div>
         <div className="mt-4 text-center">
-          <a href="/forgot-password" className="text-blue-500 hover:underline">
+          <Link to="/forgot-password" className="text-blue-500 hover:underline">
             Forgot Password?
-          </a>
+          </Link>
         </div>
       </div>
     </div>

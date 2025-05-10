@@ -11,7 +11,7 @@ const VerifyEmail = () => {
   const inputRefs = useRef(Array(6).fill(null));
   const [canResend, setCanResend] = useState(false);
   const [resendTimeout, setResendTimeout] = useState(59);
-  const [successMessage, setSuccessMessage] = useState(""); // Success message
+  const [message, setMessage] = useState(""); // Success message
   const navigate = useNavigate();
   const { store, startApiCall, finishApiCall } = useStore();
 
@@ -75,9 +75,9 @@ const VerifyEmail = () => {
   const handleVerify = async (e) => {
     e.preventDefault();
 
-    const verificationCodeString = verificationCode.join("");
-    startApiCall();
-    setSuccessMessage("");
+    const verificationCodeString = verificationCode.join(""); // Combine the code array into a single string
+    startApiCall(); // Start global loading state
+    setMessage(""); // Clear any previous success message
 
     try {
       const response = await axios.post("/auth/verify-email", {
@@ -86,7 +86,7 @@ const VerifyEmail = () => {
       });
 
       if (response.data.code === "M000") {
-        setSuccessMessage("Email verified successfully!");
+        setMessage("Email verified successfully!"); // Show success message
 
         // Nếu đến từ forgot-password, chuyển hướng đến reset-password
         if (!password) {
@@ -118,12 +118,12 @@ const VerifyEmail = () => {
             alert("An error occurred. Please try again later.");
           }
         }
-      } else {
-        alert(`Verification failed: ${response.data.message}`);
       }
     } catch (error) {
-      if (error.response) {
-        alert(`Verification failed: ${error.response.data.message}`);
+      const errorResponse = error.response;
+      if (errorResponse.status === 401) {
+        console.log("Verification failed:", errorResponse.data);
+        setMessage("Verification code is incorrect.");
       } else {
         console.error("Error during verification:", error);
         alert("An error occurred. Please try again later.");
@@ -201,9 +201,7 @@ const VerifyEmail = () => {
               />
             ))}
           </div>
-          {successMessage && (
-            <p className="text-center text-green-500">{successMessage}</p>
-          )}
+          {message && <p className="text-center text-green-500">{message}</p>}
           <button
             type="submit"
             className={`w-full rounded py-3 font-medium ${

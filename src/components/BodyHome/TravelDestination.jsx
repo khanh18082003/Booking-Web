@@ -1,10 +1,139 @@
 import PropTypes from "prop-types";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import axiosInstance from "../../utils/axiosCustomize";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+
+// Local storage key for search parameters
+const SEARCH_PARAMS_KEY = "booking_search_params";
+
+// Default search params
+const DEFAULT_SEARCH_PARAMS = {
+  destination: "",
+  startDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0], // Tomorrow
+  endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0], // 3 days from now
+  adults: 2,
+  children: 0,
+  rooms: 1,
+};
+
+// Utility functions for local storage
+const getSearchParamsFromStorage = () => {
+  try {
+    const params = localStorage.getItem(SEARCH_PARAMS_KEY);
+    return params ? JSON.parse(params) : DEFAULT_SEARCH_PARAMS;
+  } catch (error) {
+    console.error("Error reading from localStorage:", error);
+    return DEFAULT_SEARCH_PARAMS;
+  }
+};
+
+const saveSearchParamsToStorage = (params) => {
+  try {
+    localStorage.setItem(SEARCH_PARAMS_KEY, JSON.stringify(params));
+  } catch (error) {
+    console.error("Error saving to localStorage:", error);
+  }
+};
 
 const TravelDestinationCard = ({ city, imageUrl }) => {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useState(
+    getSearchParamsFromStorage(),
+  );
+
+  useEffect(() => {
+    // Update search params with the current city when component mounts
+    const currentParams = getSearchParamsFromStorage();
+    setSearchParams(currentParams);
+  }, []);
+
+  const fetchLatLngFromAddress = async (address) => {
+    const GOOGLE_MAP_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    try {
+      const res = await axios.get(
+        "https://maps.googleapis.com/maps/api/geocode/json",
+        {
+          params: {
+            address: address,
+            key: GOOGLE_MAP_API_KEY,
+          },
+        },
+      );
+
+      if (res.data.status === "OK" && res.data.results.length > 0) {
+        const location = res.data.results[0].geometry.location;
+        return { lat: location.lat, lng: location.lng };
+      } else {
+        console.error("Không tìm thấy địa chỉ:", res.data.status);
+        return null;
+      }
+    } catch (error) {
+      console.error("Lỗi gọi Geocoding API:", error);
+      return null;
+    }
+  };
+
+  const handleClickCard = async () => {
+    // Update destination in search params and save to localStorage
+    const updatedParams = { ...searchParams, destination: city };
+    saveSearchParamsToStorage(updatedParams);
+    setSearchParams(updatedParams);
+
+    const latlng = await fetchLatLngFromAddress(city);
+
+    if (!latlng) {
+      alert("Không tìm thấy vị trí, vui lòng thử lại!");
+      return;
+    }
+
+    // Get latest params from storage to ensure we have the most recent values
+    const currentParams = getSearchParamsFromStorage();
+
+    try {
+      const startDate = format(currentParams.startDate, "yyyy-MM-dd");
+      const endDate = format(currentParams.endDate, "yyyy-MM-dd");
+      // Call API tìm kiếm with parameters from local storage
+      const response = await axiosInstance.get(`/properties/search`, {
+        params: {
+          latitude: latlng.lat,
+          longitude: latlng.lng,
+          start_date: startDate,
+          end_date: endDate,
+          adults: currentParams.adults,
+          children: currentParams.children,
+          rooms: currentParams.rooms,
+        },
+      });
+      navigate(
+        `/searchresults?destination=${encodeURIComponent(
+          city,
+        )}&checkin=${startDate}&checkout=${endDate}&adults=${currentParams.adults}&children=${currentParams.children}&rooms=${currentParams.rooms}`,
+        {
+          state: {
+            propertiesList: response.data.data.data,
+            total: response.data.data.meta.total,
+            location: {
+              lat: latlng.lat,
+              lng: latlng.lng,
+            },
+            destination: city,
+          },
+        },
+      );
+    } catch (error) {
+      console.error("Error searching properties:", error);
+    }
+  };
+
   return (
-    <Link
-      to={`/${city}`}
+    <div
+      onClick={handleClickCard}
       className="relative cursor-pointer overflow-hidden rounded-lg shadow-lg transition-transform duration-300 hover:scale-[1.02] hover:transform hover:shadow-xl"
     >
       <img
@@ -21,7 +150,7 @@ const TravelDestinationCard = ({ city, imageUrl }) => {
         </div>
         {city}
       </div>
-    </Link>
+    </div>
   );
 };
 
@@ -61,7 +190,7 @@ const VietnamTravelDestinations = () => {
           Điểm đến đang thịnh hành
         </h2>
         <p className="text-[16px] text-[#595959]">
-          Du khách tìm kiếm về Việt Nam cũng đặt chỗ ở những nơi này
+          Du khách tìm kiếm về Việt Nam cũng đặt chỗ ở những nơi này
         </p>
       </div>
 

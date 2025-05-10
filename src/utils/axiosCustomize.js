@@ -11,6 +11,14 @@ const noLoadingEndpoints = [
   "/locations", // Location search suggestions
 ];
 
+const noRefreshTokenEndpoints = [
+  "/auth/login", // Login endpoint
+  "/auth/verify-email", // Email verification
+  "/auth/refresh-token", // Token refresh
+  "/auth/logout", // Logout
+  "/re-send-mail", // Resend email verification
+];
+
 // Function to register loading state handlers
 export const registerLoadingHandlers = (start, finish) => {
   startApiCall = start;
@@ -85,13 +93,15 @@ instance.interceptors.response.use(
   async function (error) {
     // Don't finish loading yet if we're going to retry the request
     const originalRequest = error.config;
-
+    const isNoAuthEndpoint = noRefreshTokenEndpoints.some((endpoint) =>
+      originalRequest.url.includes(endpoint),
+    );
     // Check if the error is 401 and the request is not already retried
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       // Ensure the URL is not /auth/login before calling /auth/refresh-token
-      if (!originalRequest.url.includes("/auth/login")) {
+      if (!isNoAuthEndpoint) {
         try {
           const response = await instance.post("/auth/refresh-token", {
             access_token: localStorage.getItem("accessToken"),

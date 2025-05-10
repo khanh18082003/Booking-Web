@@ -16,6 +16,9 @@ import PropTypes from "prop-types";
 import axiosInstance from "../../utils/axiosCustomize";
 import axios from "axios";
 
+// Local storage key for search parameters
+const SEARCH_PARAMS_KEY = "booking_search_params";
+
 const initLocation = [
   {
     icon: <IoLocationOutline />,
@@ -54,6 +57,25 @@ const dayShortNames = {
   "Chủ Nhật": "CN",
 };
 
+// Helper functions for localStorage
+const getSearchParamsFromStorage = () => {
+  try {
+    const params = localStorage.getItem(SEARCH_PARAMS_KEY);
+    return params ? JSON.parse(params) : null;
+  } catch (error) {
+    console.error("Error reading from localStorage:", error);
+    return null;
+  }
+};
+
+const saveSearchParamsToStorage = (params) => {
+  try {
+    localStorage.setItem(SEARCH_PARAMS_KEY, JSON.stringify(params));
+  } catch (error) {
+    console.error("Error saving to localStorage:", error);
+  }
+};
+
 const FormSearchBox = ({ showTitle }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,13 +84,14 @@ const FormSearchBox = ({ showTitle }) => {
   // Parse URL search parameters
   const getInitialValues = () => {
     const searchParams = new URLSearchParams(location.search);
+    const storedParams = getSearchParamsFromStorage();
 
     const initialNumbers = {
       adults: {
         name: "Người lớn",
         valueNow: searchParams.get("adults")
           ? parseInt(searchParams.get("adults"))
-          : 1,
+          : storedParams?.adults || 1,
         valueMin: 1,
         valueMax: 30,
       },
@@ -76,7 +99,7 @@ const FormSearchBox = ({ showTitle }) => {
         name: "Trẻ em",
         valueNow: searchParams.get("children")
           ? parseInt(searchParams.get("children"))
-          : 0,
+          : storedParams?.children || 0,
         valueMin: 0,
         valueMax: 10,
       },
@@ -84,21 +107,31 @@ const FormSearchBox = ({ showTitle }) => {
         name: "Phòng",
         valueNow: searchParams.get("rooms")
           ? parseInt(searchParams.get("rooms"))
-          : 1,
+          : storedParams?.rooms || 1,
         valueMin: 1,
         valueMax: 30,
       },
     };
 
-    const startDate = searchParams.get("checkin")
-      ? parse(searchParams.get("checkin"), "yyyy-MM-dd", new Date())
-      : new Date();
+    let startDate = new Date();
+    let endDate = addDays(startDate, 1);
 
-    const endDate = searchParams.get("checkout")
-      ? parse(searchParams.get("checkout"), "yyyy-MM-dd", new Date())
-      : addDays(startDate, 1);
+    if (searchParams.get("checkin")) {
+      startDate = parse(searchParams.get("checkin"), "yyyy-MM-dd", new Date());
+    } else if (storedParams?.startDate) {
+      startDate = new Date(storedParams.startDate);
+    }
 
-    const destination = searchParams.get("destination") || "";
+    if (searchParams.get("checkout")) {
+      endDate = parse(searchParams.get("checkout"), "yyyy-MM-dd", new Date());
+    } else if (storedParams?.endDate) {
+      endDate = new Date(storedParams.endDate);
+    } else {
+      endDate = addDays(startDate, 1);
+    }
+
+    const destination =
+      searchParams.get("destination") || storedParams?.destination || "";
 
     return {
       initialNumbers,
@@ -118,7 +151,17 @@ const FormSearchBox = ({ showTitle }) => {
   const [openDate, setOpenDate] = useState(false);
   const [openPersonBox, setOpenPersonBox] = useState(false);
 
-  const GOOGLE_MAP_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY; // <-- Điền API key thật vào đây
+  useEffect(() => {
+    const params = {
+      destination: inputChange,
+      startDate: date.startDate.toISOString(),
+      endDate: date.endDate.toISOString(),
+      adults: numbers.adults.valueNow,
+      children: numbers.children.valueNow,
+      rooms: numbers.rooms.valueNow,
+    };
+    saveSearchParamsToStorage(params);
+  }, [inputChange, date, numbers]);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -150,8 +193,9 @@ const FormSearchBox = ({ showTitle }) => {
     };
     fetchLocations();
   }, [inputChange]);
-  // Hàm gọi Google Geocoding API lấy Lat/Lng
+
   const fetchLatLngFromAddress = async (address) => {
+    const GOOGLE_MAP_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
     try {
       const res = await axios.get(
         "https://maps.googleapis.com/maps/api/geocode/json",
@@ -200,10 +244,12 @@ const FormSearchBox = ({ showTitle }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
   const handleOnChange = (e) => {
     const value = e.currentTarget.value;
     setInputChange(value);
   };
+
   const handleDeleteInput = () => {
     setInputChange("");
   };
@@ -211,7 +257,9 @@ const FormSearchBox = ({ showTitle }) => {
   const formatDate = (date) => {
     const dayStart = format(date, "EEEE", { locale: vi });
 
-    return `${dayShortNames[dayStart]}, ${format(date, "d 'tháng' M", { locale: vi })}`;
+    return `${dayShortNames[dayStart]}, ${format(date, "d 'tháng' M", {
+      locale: vi,
+    })}`;
   };
 
   const increase = (type) => {
@@ -244,16 +292,23 @@ const FormSearchBox = ({ showTitle }) => {
     const children = numbers.children.valueNow;
     const rooms = numbers.rooms.valueNow;
 
-    console.log("Destination:", destination);
+    saveSearchParamsToStorage({
+      destination,
+      startDate: date.startDate.toISOString(),
+      endDate: date.endDate.toISOString(),
+      adults,
+      children,
+      rooms,
+    });
+
     const latlng = await fetchLatLngFromAddress(destination);
-    console.log(latlng);
+
     if (!latlng) {
       alert("Không tìm thấy vị trí, vui lòng thử lại!");
       return;
     }
 
     try {
-      // Call API tìm kiếm
       const response = await axiosInstance.get(`/properties/search`, {
         params: {
           latitude: latlng.lat,
@@ -266,9 +321,10 @@ const FormSearchBox = ({ showTitle }) => {
         },
       });
 
-      // Navigate without location data in URL
       navigate(
-        `/searchresults?destination=${encodeURIComponent(destination)}&checkin=${startDate}&checkout=${endDate}&adults=${adults}&children=${children}&rooms=${rooms}`,
+        `/searchresults?destination=${encodeURIComponent(
+          destination,
+        )}&checkin=${startDate}&checkout=${endDate}&adults=${adults}&children=${children}&rooms=${rooms}`,
         {
           state: {
             propertiesList: response.data.data.data,
@@ -301,12 +357,13 @@ const FormSearchBox = ({ showTitle }) => {
       data-aos="fade-zoom-in"
       data-aos-duration="500"
       data-aos-delay="100"
-      className={`absolute left-[50%] w-searchbox max-w-[1100px] -translate-x-[50%] -translate-y-[54px] ${showTitle && "max-[900px]:-bottom-[118px]"}`}
+      className={`absolute left-[50%] w-searchbox max-w-[1100px] -translate-x-[50%] -translate-y-[54px] ${
+        showTitle && "max-[900px]:-bottom-[118px]"
+      }`}
     >
       <div>
         <form action="" method="GET" onSubmit={handleSubmit}>
           <div className="mt-6 mb-4 flex max-w-full flex-col gap-1 rounded-[8px] bg-border p-1 shadow-searchbox lg:flex-row">
-            {/* search destination */}
             <div
               ref={wrapperRef}
               className="relative flex-auto shrink grow rounded-[4px] bg-white text-black hover:shadow-[0_0_0_1px_#f56700]"
@@ -329,13 +386,14 @@ const FormSearchBox = ({ showTitle }) => {
                     className="h-[36px] w-full grow px-2 py-1 text-[14px] leading-[20px] font-medium outline-none placeholder:text-[#1a1a1a] focus:placeholder:text-[#959595]"
                   />
                   <div
-                    className={`cursor-pointer ${inputChange ? "block" : "hidden"}`}
+                    className={`cursor-pointer ${
+                      inputChange ? "block" : "hidden"
+                    }`}
                   >
                     <IoClose onClick={handleDeleteInput} />
                   </div>
                 </div>
               </div>
-              {/* list box destination lately */}
               {isVisible && (
                 <div className="location-list-box z-[999]">
                   <div className="w-full text-[#1a1a1a]">
@@ -371,7 +429,6 @@ const FormSearchBox = ({ showTitle }) => {
                 </div>
               )}
             </div>
-            {/* choose check-in check-out */}
             <div className="relative cursor-pointer items-center rounded-[4px] bg-white text-black hover:shadow-[0_0_0_1px_#f56700] lg:w-[27%]">
               <div onClick={handleClickDate} className="p-2">
                 <div className="flex items-center text-[14px] font-medium text-[#1a1a1a]">
@@ -409,7 +466,6 @@ const FormSearchBox = ({ showTitle }) => {
                 </>
               )}
             </div>
-            {/* choose number of person */}
             <div className="relative rounded-[4px] bg-white text-black hover:shadow-[0_0_0_1px_#f56700] lg:w-[27%]">
               <div onClick={handleClickPersonBox} className="p-2">
                 <button
@@ -441,7 +497,6 @@ const FormSearchBox = ({ showTitle }) => {
                 />
               )}
             </div>
-            {/* button submit */}
             <div className="flex min-h-[50px] flex-auto overflow-hidden rounded-[4px] text-center text-[20px]">
               <button
                 type="submit"
