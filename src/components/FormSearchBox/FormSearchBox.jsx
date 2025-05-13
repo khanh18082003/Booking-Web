@@ -194,32 +194,6 @@ const FormSearchBox = ({ showTitle }) => {
     fetchLocations();
   }, [inputChange]);
 
-  const fetchLatLngFromAddress = async (address) => {
-    const GOOGLE_MAP_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    try {
-      const res = await axios.get(
-        "https://maps.googleapis.com/maps/api/geocode/json",
-        {
-          params: {
-            address: address,
-            key: GOOGLE_MAP_API_KEY,
-          },
-        },
-      );
-
-      if (res.data.status === "OK" && res.data.results.length > 0) {
-        const location = res.data.results[0].geometry.location;
-        return { lat: location.lat, lng: location.lng };
-      } else {
-        console.error("Không tìm thấy địa chỉ:", res.data.status);
-        return null;
-      }
-    } catch (error) {
-      console.error("Lỗi gọi Geocoding API:", error);
-      return null;
-    }
-  };
-
   const handleChange = (ranges) => {
     setDate(ranges.selection);
   };
@@ -301,18 +275,10 @@ const FormSearchBox = ({ showTitle }) => {
       rooms,
     });
 
-    const latlng = await fetchLatLngFromAddress(destination);
-
-    if (!latlng) {
-      alert("Không tìm thấy vị trí, vui lòng thử lại!");
-      return;
-    }
-
     try {
       const response = await axiosInstance.get(`/properties/search`, {
         params: {
-          latitude: latlng.lat,
-          longitude: latlng.lng,
+          location: destination,
           start_date: startDate,
           end_date: endDate,
           adults,
@@ -329,10 +295,6 @@ const FormSearchBox = ({ showTitle }) => {
           state: {
             propertiesList: response.data.data.data,
             total: response.data.data.meta.total,
-            location: {
-              lat: latlng.lat,
-              lng: latlng.lng,
-            },
             destination: destination,
           },
         },

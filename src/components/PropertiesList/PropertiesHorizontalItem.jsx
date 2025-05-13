@@ -28,6 +28,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
         <div className="relative h-[240px] w-[240px] flex-shrink-0 overflow-hidden">
           <Link
             to={`/properties/${property.properties_id}`}
+            target="_blank"
             className="block h-full w-full"
           >
             <img
@@ -51,7 +52,10 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
             {/* Hotel name and location */}
             <div className="flex-1">
               <div className="flex items-center">
-                <Link to={`/properties/${property.properties_id}`}>
+                <Link
+                  to={`/properties/${property.properties_id}`}
+                  target="_blank"
+                >
                   <h3 className="text-xl font-bold text-[#006ce4] hover:text-[#00487a] active:text-[#b10a0a]">
                     {property.properties_name}
                   </h3>
@@ -61,12 +65,14 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
               <div className="mt-1 flex items-center text-[12px]">
                 <Link
                   to={`/properties/${property.id}`}
+                  target="_blank"
                   className="text-[#006ce4] underline"
                 >
                   {`${property.district} ${property.district && ","} ${property.city}`}
                 </Link>
                 <Link
                   to={`/map/${property.properties_id}`}
+                  target="_blank"
                   className="ml-2 text-[#006ce4] underline"
                 >
                   Xem trên bản đồ
@@ -192,6 +198,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
               </div>
               <Link
                 to={`/properties/${property.properties_id}`}
+                target="_blank"
                 className="mt-2 flex items-center justify-center rounded-md bg-[#006ce4] px-4 py-2 font-medium text-white hover:bg-[#00487a]"
               >
                 <span>Xem chỗ trống</span>

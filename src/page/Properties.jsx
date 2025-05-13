@@ -13,7 +13,6 @@ const Properties = () => {
   const location = useLocation();
   const total = location.state?.total || null;
   const propertiesList = location.state?.propertiesList || null;
-  const locationData = location.state?.location || null;
   const destination = location.state?.destination || null;
   useEffect(() => {
     setPageTitle(PAGE_TITLES.PROPERTIES);
@@ -63,7 +62,7 @@ const Properties = () => {
         </div>
         {/* Sort, Filter, Map > 768px */}
         <div className="mr-4 hidden flex-col lg:block lg:w-[30%]">
-          <PropertiesMap location={locationData} />
+          <PropertiesMap properties={propertiesList} />
           <PropertiesFilter />
         </div>
         <PropertiesList
