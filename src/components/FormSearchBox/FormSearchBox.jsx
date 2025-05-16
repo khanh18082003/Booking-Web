@@ -14,7 +14,6 @@ import NumberOfPersonBox from "./NumerOfPersonBox";
 import { useNavigate, useLocation } from "react-router";
 import PropTypes from "prop-types";
 import axiosInstance from "../../utils/axiosCustomize";
-import axios from "axios";
 
 // Local storage key for search parameters
 const SEARCH_PARAMS_KEY = "booking_search_params";
@@ -119,13 +118,21 @@ const FormSearchBox = ({ showTitle }) => {
     if (searchParams.get("checkin")) {
       startDate = parse(searchParams.get("checkin"), "yyyy-MM-dd", new Date());
     } else if (storedParams?.startDate) {
-      startDate = new Date(storedParams.startDate);
+      if (storedParams.startDate < Date.now()) {
+        startDate = new Date();
+      } else {
+        startDate = new Date(storedParams.startDate);
+      }
     }
 
     if (searchParams.get("checkout")) {
       endDate = parse(searchParams.get("checkout"), "yyyy-MM-dd", new Date());
     } else if (storedParams?.endDate) {
-      endDate = new Date(storedParams.endDate);
+      if (storedParams.endDate < Date.now()) {
+        endDate = addDays(startDate, 1);
+      } else {
+        endDate = new Date(storedParams.endDate);
+      }
     } else {
       endDate = addDays(startDate, 1);
     }
@@ -175,7 +182,7 @@ const FormSearchBox = ({ showTitle }) => {
             location: inputChange,
           },
         });
-        console.log(response.data.data);
+
         const parsed =
           typeof response.data.data === "string"
             ? JSON.parse(response.data.data)
@@ -300,8 +307,57 @@ const FormSearchBox = ({ showTitle }) => {
         },
       );
     } catch (error) {
-      console.error("Lỗi tìm kiếm:", error);
-      alert("Có lỗi khi tìm kiếm chỗ nghỉ!");
+      console.error("Lỗi khi tìm kiếm:", error);
+
+      // Check if we have valid locations to retry with
+      if (locations && locations.length > 0) {
+        console.log("Retrying with location:", locations[0].destination);
+
+        // Update input field with first location
+        const newDestination = locations[0].destination;
+        setInputChange(newDestination);
+
+        // Retry the search with the new destination
+        try {
+          const startDate = format(date.startDate, "yyyy-MM-dd");
+          const endDate = format(date.endDate, "yyyy-MM-dd");
+          const adults = numbers.adults.valueNow;
+          const children = numbers.children.valueNow;
+          const rooms = numbers.rooms.valueNow;
+
+          const response = await axiosInstance.get(`/properties/search`, {
+            params: {
+              location: newDestination,
+              start_date: startDate,
+              end_date: endDate,
+              adults,
+              children,
+              rooms,
+            },
+          });
+
+          navigate(
+            `/searchresults?destination=${encodeURIComponent(
+              newDestination,
+            )}&checkin=${startDate}&checkout=${endDate}&adults=${adults}&children=${children}&rooms=${rooms}`,
+            {
+              state: {
+                propertiesList: response.data.data.data,
+                total: response.data.data.meta.total,
+                destination: newDestination,
+              },
+            },
+          );
+        } catch (retryError) {
+          console.error("Retry search also failed:", retryError);
+          // Show appropriate error message to user
+          alert(
+            "Không thể tìm kiếm địa điểm. Vui lòng thử lại với địa điểm khác.",
+          );
+        }
+      } else {
+        alert("Không thể tìm kiếm địa điểm. Vui lòng thử lại sau.");
+      }
     }
   };
 

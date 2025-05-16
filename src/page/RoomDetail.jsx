@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import OverviewContent from "../components/DetailRoom/OverviewContent";
 import InfoPricingContent from "../components/DetailRoom/InfoPricingContent";
 import AmenitiesContent from "../components/DetailRoom/AmenitiesContent";
@@ -6,8 +6,21 @@ import RulesContent from "../components/DetailRoom/RulesContent";
 import NotesContent from "../components/DetailRoom/NotesContent";
 import ReviewsContent from "../components/DetailRoom/ReviewsContent";
 import Banner from "../components/layout/Banner";
+import { useParams, useNavigate, useLocation, Outlet } from "react-router-dom";
+import axios from "../utils/axiosCustomize";
+
 const RoomDetail = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [isLoading, setIsLoading] = useState(true);
+  const [hotelData, setHotelData] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Use location to determine active tab from URL
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Get active tab from URL path
+  const path = location.pathname.split("/");
+  const activeTab = path[path.length - 1] || "overview";
 
   const tabs = [
     { id: "overview", label: "Tổng quan" },
@@ -17,25 +30,57 @@ const RoomDetail = () => {
     { id: "notes", label: "Ghi chú" },
     { id: "reviews", label: "Đánh giá của khách", count: 570 },
   ];
-  const hotelData = {
-    title: "Shogun Hotel",
-    address: "449 Đường Trần Hưng Đạo 8, Quận 1, TP. Hồ Chí Minh, Việt Nam",
+
+  // Get property id from URL
+  const { id, propertiesName } = useParams();
+
+  // Fetch property data from API
+  useEffect(() => {
+    const fetchPropertyDetails = async () => {
+      if (!id) return;
+
+      try {
+        setIsLoading(true);
+        const response = await axios.get(`/properties/${id}`);
+
+        if (response.data.code === "M000") {
+          const propertyData = response.data.data;
+          setHotelData(propertyData);
+          setError(null);
+        } else {
+          setError("Failed to load property details.");
+        }
+      } catch (err) {
+        console.error("Error fetching property details:", err);
+        setError("An error occurred while loading property details.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPropertyDetails();
+  }, [id]);
+
+  // Function to handle tab changes
+  const handleTabChange = (tabId) => {
+    navigate(`/properties/${id}/${propertiesName}/${tabId}`);
   };
+
   // Function to render the appropriate content based on active tab
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
         return <OverviewContent hotelData={hotelData} />;
       case "info":
-        return <InfoPricingContent />;
+        return <InfoPricingContent hotelData={hotelData} />;
       case "amenities":
-        return <AmenitiesContent />;
+        return <AmenitiesContent hotelData={hotelData} />;
       case "rules":
-        return <RulesContent />;
+        return <RulesContent hotelData={hotelData} />;
       case "notes":
-        return <NotesContent />;
+        return <NotesContent hotelData={hotelData} />;
       case "reviews":
-        return <ReviewsContent />;
+        return <ReviewsContent hotelData={hotelData} />;
       default:
         return <OverviewContent hotelData={hotelData} />;
     }
@@ -43,35 +88,51 @@ const RoomDetail = () => {
 
   return (
     <>
-      <div className="mx-auto max-w-6xl overflow-hidden rounded-lg bg-white shadow-md">
-        {/* Navigation Tabs */}
-        <div className="border-b">
-          <div className="flex overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-4 font-medium whitespace-nowrap transition-colors ${
-                  activeTab === tab.id
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                }`}
-              >
-                {tab.label}
-                {tab.count && (
-                  <span className="ml-1 text-sm font-normal">
-                    ({tab.count})
-                  </span>
-                )}
-              </button>
-            ))}
+      <Banner showTitle={false} />
+      <div className="mx-auto mt-[-20px] max-w-[1110px] overflow-hidden rounded-lg bg-white">
+        {isLoading ? (
+          <div className="p-8 text-center">
+            <div className="flex animate-pulse flex-col items-center space-y-4">
+              <div className="h-8 w-1/2 rounded bg-gray-200"></div>
+              <div className="h-4 w-1/4 rounded bg-gray-200"></div>
+            </div>
           </div>
-        </div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-500">{error}</div>
+        ) : (
+          <>
+            {/* Navigation Tabs */}
+            <div className="border-b border-gray-300">
+              <div className="flex items-center justify-between overflow-x-auto">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`px-6 py-4 font-medium whitespace-nowrap transition-colors ${
+                      activeTab === tab.id
+                        ? "border-b-2 border-blue-600 text-blue-600"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    {tab.label}
+                    {tab.count && (
+                      <span className="ml-1 text-sm font-normal">
+                        ({tab.count})
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* Tab Content */}
-        {renderTabContent()}
+            {/* Tab Content */}
+            {renderTabContent()}
+
+            {/* This Outlet is needed for React Router to work with nested routes */}
+            <Outlet />
+          </>
+        )}
       </div>
-      {/* <InfoPricingContent /> */}
     </>
   );
 };

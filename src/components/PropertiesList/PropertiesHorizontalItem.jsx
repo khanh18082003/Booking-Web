@@ -27,7 +27,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
         {/* Image section - improved styling */}
         <div className="relative h-[240px] w-[240px] flex-shrink-0 overflow-hidden">
           <Link
-            to={`/properties/${property.properties_id}`}
+            to={`/properties/${property.properties_id}/${property.properties_name}`}
             target="_blank"
             className="block h-full w-full"
           >
@@ -53,7 +53,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
             <div className="flex-1">
               <div className="flex items-center">
                 <Link
-                  to={`/properties/${property.properties_id}`}
+                  to={`/properties/${property.properties_id}/${property.properties_name}`}
                   target="_blank"
                 >
                   <h3 className="text-xl font-bold text-[#006ce4] hover:text-[#00487a] active:text-[#b10a0a]">
@@ -64,14 +64,14 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
 
               <div className="mt-1 flex items-center text-[12px]">
                 <Link
-                  to={`/properties/${property.id}`}
+                  to={`/properties/${property.properties_id}/${property.properties_name}`}
                   target="_blank"
                   className="text-[#006ce4] underline"
                 >
                   {`${property.district} ${property.district && ","} ${property.city}`}
                 </Link>
                 <Link
-                  to={`/map/${property.properties_id}`}
+                  to={`/map/${property.properties_id}/${property.properties_name}`}
                   target="_blank"
                   className="ml-2 text-[#006ce4] underline"
                 >
@@ -157,7 +157,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
                           {accommodation.total_beds} giường (
                           {accommodation.bed_names.map((bed, index) => (
                             <span key={index}>
-                              {bed}
+                              {bed.quantity} {bed.bed_type_name}
                               {index < accommodation.bed_names.length - 1
                                 ? ", "
                                 : ""}
@@ -169,7 +169,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
                         <span>
                           {accommodation.total_beds}{" "}
                           {accommodation.bed_names &&
-                            accommodation.bed_names[0]}
+                            accommodation.bed_names[0].bed_type_name}
                         </span>
                       )}
                     </div>
@@ -183,7 +183,9 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
               <div className="text-right">
                 <div className="text-xs text-gray-500">
                   {property.nights} đêm, {property.adults} người lớn
-                  {`${property.children !== 0 && `, ${property.children} trẻ em`}`}
+                  {property.children > 0 && (
+                    <span>, {property.children} trẻ em</span>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-end">
@@ -197,7 +199,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
                 </div>
               </div>
               <Link
-                to={`/properties/${property.properties_id}`}
+                to={`/properties/${property.properties_id}/${property.properties_name}`}
                 target="_blank"
                 className="mt-2 flex items-center justify-center rounded-md bg-[#006ce4] px-4 py-2 font-medium text-white hover:bg-[#00487a]"
               >
@@ -210,6 +212,46 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
       </div>
     </div>
   );
+};
+
+PropertiesHorizontalItem.propTypes = {
+  property: PropTypes.shape({
+    properties_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+      .isRequired,
+    image: PropTypes.string.isRequired,
+    properties_name: PropTypes.string.isRequired,
+    district: PropTypes.string,
+    city: PropTypes.string,
+    distance: PropTypes.number,
+    beachDistance: PropTypes.string,
+    specialTag: PropTypes.string,
+    rating: PropTypes.number.isRequired,
+    total_rating: PropTypes.number.isRequired,
+    accommodations: PropTypes.arrayOf(
+      PropTypes.shape({
+        accommodation_id: PropTypes.oneOfType([
+          PropTypes.string,
+          PropTypes.number,
+        ]).isRequired,
+        suggested_quantity: PropTypes.number,
+        accommodation_name: PropTypes.string.isRequired,
+        total_beds: PropTypes.number,
+        bed_names: PropTypes.arrayOf(
+          PropTypes.shape({
+            quantity: PropTypes.number,
+            bed_type_name: PropTypes.string,
+          }),
+        ),
+      }),
+    ).isRequired,
+    nights: PropTypes.number.isRequired,
+    adults: PropTypes.number.isRequired,
+    children: PropTypes.number,
+    total_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+      .isRequired,
+    taxAndFee: PropTypes.string,
+  }).isRequired,
+  getRatingText: PropTypes.func.isRequired,
 };
 
 export default PropertiesHorizontalItem;

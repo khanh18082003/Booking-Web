@@ -1,5 +1,5 @@
 import AppLayout from "./components/layout/AppLayout";
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./page/Home";
 import Login from "./page/Login";
 import Register from "./page/Register";
@@ -44,8 +44,18 @@ function App() {
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Home />} />
-          <Route path="/roomdetail" element={<RoomDetail />} />
-          <Route path="properties/:id" element={<RoomDetail />} />
+
+          {/* Hotel detail routes with nested tab routes */}
+          <Route path="properties/:id/:propertiesName" element={<RoomDetail />}>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={null} />
+            <Route path="info" element={null} />
+            <Route path="amenities" element={null} />
+            <Route path="rules" element={null} />
+            <Route path="notes" element={null} />
+            <Route path="reviews" element={null} />
+          </Route>
+
           <Route path="myaccount" element={<Profile />} />
           <Route path="myaccount/personal" element={<Personal />} />
           <Route path="searchresults" element={<Properties />} />
