@@ -1,21 +1,16 @@
-import React, { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, Share, Star, MapPin, ArrowRight, Server } from "react-feather";
+import { MapPin, ArrowRight, Server } from "react-feather";
 import PropTypes from "prop-types";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import { IoLocationOutline } from "react-icons/io5";
 import { TiLocation } from "react-icons/ti";
 import { setPageTitle } from "../../utils/pageTitle";
+import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
+
 const containerStyle = {
   width: "100%",
   height: "170px",
-};
-
-// Larger container style for the modal map
-const modalMapContainerStyle = {
-  width: "100%",
-  height: "80vh",
-  maxHeight: "700px",
 };
 
 const mapOptions = {
@@ -25,16 +20,29 @@ const mapOptions = {
   fullscreenControl: false,
 };
 
-const OverviewContent = ({ hotelData }) => {
+const OverviewContent = ({ hotelData, reviewsData }) => {
   const [map, setMap] = useState(null);
   const [mapCenter, setMapCenter] = useState({
     lat: 10.762622,
     lng: 106.660172,
   }); // Default to Ho Chi Minh City
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
 
   useEffect(() => {
     setPageTitle(hotelData.name);
   }, []);
+
+  const handleNextReview = () => {
+    if (reviewsData && reviewsData.data && reviewsData.data.length > 0) {
+      setCurrentReviewIndex((prevIndex) => prevIndex + 1);
+    }
+  };
+
+  const handlePrevReview = () => {
+    if (reviewsData && reviewsData.data && reviewsData.data.length > 0) {
+      setCurrentReviewIndex((prevIndex) => prevIndex - 1);
+    }
+  };
 
   // Load Google Maps API
   const { isLoaded, loadError } = useJsApiLoader({
@@ -106,13 +114,7 @@ const OverviewContent = ({ hotelData }) => {
             {hotelData.name || "Hotel Name"}
           </h1>
           <div className="flex space-x-2">
-            <button className="rounded-md border p-2">
-              <Heart size={20} className="text-gray-400" />
-            </button>
-            <button className="rounded-md border p-2">
-              <Share size={20} className="text-gray-400" />
-            </button>
-            <button className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-white">
+            <button className="cursor-pointer rounded-md bg-third px-4 py-2 text-white duration-200 hover:bg-secondary">
               Đặt ngay
             </button>
           </div>
@@ -120,11 +122,11 @@ const OverviewContent = ({ hotelData }) => {
 
         {/* Location */}
         <div className="mt-2 flex items-center text-gray-600">
-          <MapPin size={18} className="mr-2 text-blue-500" />
+          <MapPin size={18} className="mr-2 text-third" />
           <p className="text-sm">
             {hotelData.address} -
-            <span className="text-blue-500"> Vị trí tuyệt vời</span> -
-            <span className="text-blue-500"> Hiển thị bản đồ</span>
+            <span className="text-third"> Vị trí tuyệt vời</span> -
+            <span className="text-third"> Hiển thị bản đồ</span>
           </p>
         </div>
       </div>
@@ -143,26 +145,49 @@ const OverviewContent = ({ hotelData }) => {
                 />
               </div>
 
-              {/* Thumbnails row */}
-              <div
-                className={`grid grid-cols-${hotelData.image_urls.length - 1} gap-2`}
-              >
-                {[1, 2, 3, 4, 5].map(
-                  (index) =>
-                    index < hotelData.image_urls.length && (
-                      <div
-                        key={index}
-                        className="h-25 overflow-hidden rounded-md"
-                      >
-                        <img
-                          src={hotelData.image_urls[index]}
-                          alt={`Property image ${index + 1}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ),
-                )}
-              </div>
+              {(() => {
+                // Calculate how many images we have to display (after the first 3)
+                const remainingImagesCount = Math.min(
+                  hotelData.image_urls.length - 1,
+                  5,
+                );
+
+                // If we don't have any images to display in this row, return null
+                if (remainingImagesCount <= 0) return null;
+
+                // Render the grid with the appropriate columns based on image count
+                return (
+                  <div
+                    className={`mt-2 grid gap-2 ${
+                      remainingImagesCount === 1
+                        ? "grid-cols-1"
+                        : remainingImagesCount === 2
+                          ? "grid-cols-2"
+                          : remainingImagesCount === 3
+                            ? "grid-cols-3"
+                            : remainingImagesCount === 4
+                              ? "grid-cols-4"
+                              : "grid-cols-5"
+                    }`}
+                  >
+                    {[1, 2, 3, 4, 5].map(
+                      (index) =>
+                        index < hotelData.image_urls.length && (
+                          <div
+                            key={index}
+                            className="h-25 overflow-hidden rounded-md"
+                          >
+                            <img
+                              src={hotelData.image_urls[index]}
+                              alt={`Property image ${index + 1}`}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ),
+                    )}
+                  </div>
+                );
+              })()}
             </>
           ) : (
             <>
@@ -196,26 +221,50 @@ const OverviewContent = ({ hotelData }) => {
                 </div>
               </div>
 
-              {/* Bottom row with 5 smaller images */}
-              <div
-                className={`mt-2 grid grid-cols-${hotelData.image_urls.length - 3 <= 5 ? hotelData.image_urls.length - 3 : 5} gap-2`}
-              >
-                {[3, 4, 5, 6, 7].map(
-                  (index) =>
-                    index < hotelData.image_urls.length && (
-                      <div
-                        key={index}
-                        className="h-25 overflow-hidden rounded-md"
-                      >
-                        <img
-                          src={hotelData.image_urls[index]}
-                          alt={`Property image ${index + 1}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ),
-                )}
-              </div>
+              {/* Bottom row with smaller images - Grid adjusts based on available images */}
+              {(() => {
+                // Calculate how many images we have to display (after the first 3)
+                const remainingImagesCount = Math.min(
+                  hotelData.image_urls.length - 3,
+                  5,
+                );
+
+                // If we don't have any images to display in this row, return null
+                if (remainingImagesCount <= 0) return null;
+
+                // Render the grid with the appropriate columns based on image count
+                return (
+                  <div
+                    className={`mt-2 grid gap-2 ${
+                      remainingImagesCount === 1
+                        ? "grid-cols-1"
+                        : remainingImagesCount === 2
+                          ? "grid-cols-2"
+                          : remainingImagesCount === 3
+                            ? "grid-cols-3"
+                            : remainingImagesCount === 4
+                              ? "grid-cols-4"
+                              : "grid-cols-5"
+                    }`}
+                  >
+                    {[3, 4, 5, 6, 7].map(
+                      (index) =>
+                        index < hotelData.image_urls.length && (
+                          <div
+                            key={index}
+                            className="h-25 overflow-hidden rounded-md"
+                          >
+                            <img
+                              src={hotelData.image_urls[index]}
+                              alt={`Property image ${index + 1}`}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ),
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* More photos button */}
               {hotelData.image_urls.length > 7 && (
@@ -233,40 +282,108 @@ const OverviewContent = ({ hotelData }) => {
         {/* Right Column - Reviews and Map */}
         <div className="flex flex-col gap-2">
           {/* Rating card */}
-          <div className="mb-4 flex-1 rounded-lg bg-blue-50 p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="font-bold">Đánh giá</h3>
-              <div className="flex items-center">
-                <div className="mr-2 flex items-center rounded bg-blue-600 px-2 py-1 text-white">
-                  <span className="text-sm font-bold">7.9</span>
+          <div className="mb-4 flex flex-1 flex-col rounded-lg border-1 border-gray-300 bg-white p-3">
+            {reviewsData && reviewsData?.data.length > 0 ? (
+              <>
+                <div className="mb-2 flex justify-end border-b-1 border-gray-300 pb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-col">
+                      <span className="text-md font-[400]">
+                        {hotelData.rating >= 9
+                          ? "Tuyệt vời"
+                          : hotelData.rating >= 8
+                            ? "Rất tốt"
+                            : hotelData.rating >= 7
+                              ? "Tốt"
+                              : "Hài lòng"}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {hotelData.total_rating} đánh giá
+                      </span>
+                    </div>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-tl-md rounded-tr-md rounded-br-md bg-[#003b95]">
+                      <span className="text-md font-bold text-white">
+                        {hotelData.rating}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-sm font-medium">Tốt</span>
-              </div>
-            </div>
-            <div className="mb-2">
-              <div className="flex items-center text-yellow-400">
-                <Star size={16} fill="#FBBF24" />
-                <Star size={16} fill="#FBBF24" />
-                <Star size={16} fill="#FBBF24" />
-                <Star size={16} fill="#FBBF24" />
-                <Star size={16} stroke="#FBBF24" fill="none" />
-              </div>
-            </div>
-            <p className="text-xs text-gray-600">48 đánh giá</p>
 
-            {/* Sample review */}
-            <div className="mt-3 border-t pt-3">
-              <p className="text-sm italic">
-                "Phòng rộng, mới và đẹp. Giường cũng êm. Mình đến vào 2h sáng,
-                vẫn có người mở cửa."
-              </p>
-              <div className="mt-2 flex items-center">
-                <div className="mr-2 h-6 w-6 rounded-full bg-gray-300 text-center text-xs leading-6">
-                  N
+                {/* Top review */}
+                <div className="relative flex flex-1 flex-col">
+                  <div
+                    onClick={handlePrevReview}
+                    className={`${currentReviewIndex === 0 && "hidden"} absolute top-[50%] left-[-10px] translate-y-[-50%] cursor-pointer rounded-full p-1 duration-200 hover:bg-gray-200`}
+                  >
+                    <MdOutlineChevronLeft className="text-2xl" />
+                  </div>
+                  <div
+                    onClick={handleNextReview}
+                    className={`${currentReviewIndex === reviewsData.data.length - 1 && "hidden"} absolute top-[50%] right-[-10px] translate-y-[-50%] cursor-pointer rounded-full p-1 duration-200 hover:bg-gray-200`}
+                  >
+                    <MdOutlineChevronRight className="text-2xl" />
+                  </div>
+                  <h4 className="mb-1 text-[12px] font-[400]">
+                    Khách lưu trú ở đây thích điều gì?
+                  </h4>
+                  <p className="mx-4 text-[12px] italic">
+                    &quot;{reviewsData.data[currentReviewIndex].review}&quot;
+                  </p>
+                  <div className="mt-2 ml-4 flex flex-1 items-end">
+                    <div className="flex items-center">
+                      <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300 text-center text-xs leading-6">
+                        <img
+                          src={
+                            reviewsData.data[currentReviewIndex]?.avatar ||
+                            "/src/assets/kh.png"
+                          }
+                          alt="Avatar"
+                          className="h-8 w-8 rounded-full"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">
+                          {reviewsData.data[currentReviewIndex]?.name || "KH"}
+                        </span>
+                        <div className="flex items-center">
+                          {reviewsData.data[currentReviewIndex]?.nationality ===
+                            "Vietnam" && (
+                            <>
+                              <img
+                                src="/src/assets/vn-language.png"
+                                alt="Vietnam flag"
+                                className="mr-1 h-3 w-4"
+                              />
+                              <span className="text-xs text-gray-600">
+                                {reviewsData.data[currentReviewIndex]
+                                  ?.nationality || "Việt Nam"}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-xs">Nghĩa - Việt Nam</span>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                <h3 className="mb-3 text-base font-bold">
+                  Chưa có điểm đánh giá...
+                </h3>
+                <div className="flex items-start">
+                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-gray-300 text-gray-600">
+                    <span className="text-xs">!</span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Chúng tôi cần ít nhất 1 đánh giá để có thể tính điểm đánh
+                    giá. Nếu bạn đặt phòng và đánh giá chỗ nghỉ, bạn có thể giúp{" "}
+                    {hotelData.name} đạt được mục tiêu này.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Map card */}
@@ -338,7 +455,8 @@ const OverviewContent = ({ hotelData }) => {
 };
 
 OverviewContent.propTypes = {
-  hotelData: PropTypes.object,
+  hotelData: PropTypes.object.isRequired,
+  reviewsData: PropTypes.object.isRequired,
 };
 
 export default OverviewContent;

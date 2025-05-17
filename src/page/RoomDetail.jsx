@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import OverviewContent from "../components/DetailRoom/OverviewContent";
 import InfoPricingContent from "../components/DetailRoom/InfoPricingContent";
 import AmenitiesContent from "../components/DetailRoom/AmenitiesContent";
@@ -11,7 +11,9 @@ import axios from "../utils/axiosCustomize";
 
 const RoomDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [hotelData, setHotelData] = useState(null);
+  const [reviewsData, setReviewsData] = useState(null);
   const [error, setError] = useState(null);
 
   // Use location to determine active tab from URL
@@ -61,6 +63,31 @@ const RoomDetail = () => {
     fetchPropertyDetails();
   }, [id]);
 
+  // Fetch reviews data when component mounts - now fetch for all tabs, not just reviews tab
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!id) return;
+
+      try {
+        setReviewsLoading(true);
+        const response = await axios.get(`/properties/${id}/reviews`);
+
+        if (response.data.code === "M000") {
+          const reviews = response.data.data;
+          setReviewsData(reviews);
+        } else {
+          console.error("Failed to load reviews:", response.data.message);
+        }
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, [id]);
+
   // Function to handle tab changes
   const handleTabChange = (tabId) => {
     navigate(`/properties/${id}/${propertiesName}/${tabId}`);
@@ -70,7 +97,9 @@ const RoomDetail = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
-        return <OverviewContent hotelData={hotelData} />;
+        return (
+          <OverviewContent hotelData={hotelData} reviewsData={reviewsData} />
+        );
       case "info":
         return <InfoPricingContent hotelData={hotelData} />;
       case "amenities":
@@ -80,9 +109,17 @@ const RoomDetail = () => {
       case "notes":
         return <NotesContent hotelData={hotelData} />;
       case "reviews":
-        return <ReviewsContent hotelData={hotelData} />;
+        return (
+          <ReviewsContent
+            hotelData={hotelData}
+            reviewsData={reviewsData}
+            isLoading={reviewsLoading}
+          />
+        );
       default:
-        return <OverviewContent hotelData={hotelData} />;
+        return (
+          <OverviewContent hotelData={hotelData} reviewsData={reviewsData} />
+        );
     }
   };
 
