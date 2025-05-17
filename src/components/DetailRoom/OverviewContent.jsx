@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, ArrowRight, Server } from "react-feather";
+import { MapPin, ArrowRight } from "react-feather";
 import PropTypes from "prop-types";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import { IoLocationOutline } from "react-icons/io5";
@@ -113,11 +113,14 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
           <h1 className="text-2xl font-bold">
             {hotelData.name || "Hotel Name"}
           </h1>
-          <div className="flex space-x-2">
+          <Link
+            to={`/properties/${hotelData.id}/${hotelData.name}/info`}
+            className="flex space-x-2"
+          >
             <button className="cursor-pointer rounded-md bg-third px-4 py-2 text-white duration-200 hover:bg-secondary">
               Đặt ngay
             </button>
-          </div>
+          </Link>
         </div>
 
         {/* Location */}
@@ -141,7 +144,8 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
                 <img
                   src={hotelData.image_urls[0]}
                   alt={`${hotelData.name} main view`}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full cursor-pointer object-cover"
+                  loading="lazy"
                 />
               </div>
 
@@ -180,7 +184,8 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
                             <img
                               src={hotelData.image_urls[index]}
                               alt={`Property image ${index + 1}`}
-                              className="h-full w-full object-cover"
+                              className="h-full w-full cursor-pointer object-cover"
+                              loading="lazy"
                             />
                           </div>
                         ),
@@ -198,7 +203,8 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
                   <img
                     src={hotelData.image_urls[0] || hotelData.image}
                     alt={`${hotelData.name} main view`}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full cursor-pointer object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <div className="grid h-85 grid-rows-2 gap-2">
@@ -206,7 +212,8 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
                     <img
                       src={hotelData.image_urls[1] || hotelData.image}
                       alt={`${hotelData.name} view 1`}
-                      className="w-full object-cover"
+                      className="w-full cursor-pointer object-cover"
+                      loading="lazy"
                     />
                   </div>
 
@@ -215,7 +222,8 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
                     <img
                       src={hotelData.image_urls[2] || hotelData.image}
                       alt={`${hotelData.name} view 2`}
-                      className="w-full object-cover"
+                      className="w-full cursor-pointer object-cover"
+                      loading="lazy"
                     />
                   </div>
                 </div>
@@ -252,29 +260,28 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
                         index < hotelData.image_urls.length && (
                           <div
                             key={index}
-                            className="h-25 overflow-hidden rounded-md"
+                            className="relative h-25 overflow-hidden rounded-md"
                           >
                             <img
                               src={hotelData.image_urls[index]}
                               alt={`Property image ${index + 1}`}
-                              className="h-full w-full object-cover"
+                              className="h-full w-full cursor-pointer object-cover"
+                              loading="lazy"
                             />
+                            {index === 7 && hotelData.image_urls.length > 8 && (
+                              <div className="absolute top-0 left-0 flex h-full w-full cursor-pointer items-center justify-center text-white">
+                                <div className="h-full w-full bg-black opacity-30"></div>
+                                <span className="absolute font-extrabold underline">
+                                  +{hotelData.image_urls.length - 8} ảnh
+                                </span>
+                              </div>
+                            )}
                           </div>
                         ),
                     )}
                   </div>
                 );
               })()}
-
-              {/* More photos button */}
-              {hotelData.image_urls.length > 7 && (
-                <div className="mt-2 text-right">
-                  <button className="flex items-center justify-end text-sm font-medium text-blue-600">
-                    +{hotelData.image_urls.length - 7} ảnh{" "}
-                    <ArrowRight size={16} className="ml-1" />
-                  </button>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -405,47 +412,10 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
       <div className="px-6 pb-6">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="md:col-span-2">
-            {/* Genius Discount Info */}
             <div className="mb-6 text-sm">
-              <p className="mb-2">
-                Bạn có thể đủ điều kiện hưởng giảm giá Genius tại{" "}
-                {hotelData.name || "khách sạn này"}. Để biết giảm giá Genius có
-                áp dụng cho ngày bạn đã chọn hay không, hãy{" "}
-                <span className="min-h-[36px] rounded-[4px] bg-white leading-7">
-                  <Link to="/login">
-                    <span className="text-[14px] font-light text-third">
-                      Đăng nhập
-                    </span>
-                  </Link>
-                </span>
-              </p>
-              <p className="mb-2">
-                Giảm giá Genius tại chỗ nghỉ này tùy thuộc vào ngày đặt phòng,
-                ngày lưu trú và các ưu đãi có sẵn khác.
-              </p>
-              <p className="mb-4">{hotelData.description}</p>
-              <p className="mb-4">
-                Với phòng tắm riêng được trang bị với xít/chậu rửa và đồ vệ sinh
-                cá nhân miễn phí, một số phòng tại khách sạn cũng có view thành
-                phố. Tại {hotelData.name || "khách sạn này"}, tất cả các phòng
-                đều có ga trải giường và khăn tắm.
-              </p>
-            </div>
-          </div>
-
-          <div className="rounded-lg bg-gray-50 p-4">
-            {/* Amenities */}
-            <div className="mb-4">
-              <h3 className="mb-4 text-lg font-bold">
-                Điểm nổi bật của chỗ nghỉ
-              </h3>
-
-              <div className="flex items-start">
-                <Server size={24} className="mt-1 mr-3 text-gray-700" />
-                <div>
-                  <h4 className="font-medium">Tắm nhanh</h4>
-                </div>
-              </div>
+              <div
+                dangerouslySetInnerHTML={{ __html: hotelData.description }}
+              />{" "}
             </div>
           </div>
         </div>

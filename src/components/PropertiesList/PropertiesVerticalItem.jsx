@@ -4,6 +4,38 @@ import { FaBed } from "react-icons/fa";
 import { Link } from "react-router";
 
 const PropertiesVerticalItem = ({ property, getRatingText }) => {
+  PropertiesVerticalItem.propTypes = {
+    property: PropTypes.shape({
+      image: PropTypes.string.isRequired,
+      properties_name: PropTypes.string.isRequired,
+      rating: PropTypes.number.isRequired,
+      total_rating: PropTypes.number.isRequired,
+      district: PropTypes.string,
+      city: PropTypes.string,
+      distance: PropTypes.number.isRequired,
+      properties_id: PropTypes.string.isRequired,
+      accommodations: PropTypes.arrayOf(
+        PropTypes.shape({
+          accommodation_id: PropTypes.string.isRequired,
+          suggested_quantity: PropTypes.number,
+          accommodation_name: PropTypes.string.isRequired,
+          total_beds: PropTypes.number.isRequired,
+          bed_names: PropTypes.arrayOf(
+            PropTypes.shape({
+              quantity: PropTypes.number.isRequired,
+              bed_type_name: PropTypes.string.isRequired,
+            }),
+          ),
+        }),
+      ).isRequired,
+      nights: PropTypes.number.isRequired,
+      adults: PropTypes.number.isRequired,
+      children: PropTypes.number.isRequired,
+      total_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        .isRequired,
+    }).isRequired,
+    getRatingText: PropTypes.func.isRequired,
+  };
   // formatting VND price
   const formatPrice = (price) => {
     if (!price && price !== 0) return "VND 0";
@@ -22,7 +54,11 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md">
       {/* Image container with wishlist button */}
-      <div className="relative overflow-hidden">
+      <Link
+        to={`/properties/${property.properties_id}/${property.properties_name}`}
+        target="_blank"
+        className="relative h-[250px] overflow-hidden"
+      >
         <img
           src={property.image}
           alt={property.properties_name}
@@ -42,7 +78,7 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
           </svg>
         </button>
-      </div>
+      </Link>
 
       {/* Content section */}
       <div className="flex-1 p-4">
@@ -55,21 +91,38 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
               </h3>
             </div>
             <div className="mb-2 flex w-full items-center">
-              <div className="text-xs text-gray-600">
-                <div className="flex h-8 w-8 items-center justify-center rounded-tl-md rounded-tr-md rounded-br-md bg-[#003b95]">
-                  <span className="text-sm font-bold text-white">
-                    {property.rating}
+              {property.rating > 0 ? (
+                <>
+                  <div className="text-xs text-gray-600">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-tl-md rounded-tr-md rounded-br-md bg-[#003b95]">
+                      <span className="text-sm font-bold text-white">
+                        {property.rating}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-2 flex flex-col items-start text-sm">
+                    <span className="font-medium">
+                      {getRatingText(property.rating)}
+                    </span>
+                    <span className="text-[12px]">
+                      {property.total_rating} đánh giá
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold">Chưa có đánh giá</span>
+                  <span className="rounded-[6px] bg-fifth px-1 py-[1px] text-sm">
+                    Mới trên Booking.com
                   </span>
                 </div>
-              </div>
-              <div className="ml-2 flex items-center text-sm">
-                <span className="font-medium">
-                  {getRatingText(property.rating)}
-                </span>
-              </div>
+              )}
             </div>
             <div className="flex flex-col items-start gap-1 text-[12px]">
-              <Link to={`/properties/`} target="_blank">
+              <Link
+                to={`/properties/${property.properties_id}/${property.properties_name}`}
+                target="_blank"
+              >
                 <span className="text-[12px] text-third">
                   <span className="underline">{`${property.district} ${property.district && ","} ${property.city}`}</span>
                   <span className="px-2"></span>
@@ -91,7 +144,11 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
           </div>
 
           {/* Property Detail */}
-          <div className="flex w-full flex-1 shrink grow flex-col">
+          <Link
+            to={`/properties/${property.properties_id}/${property.properties_name}`}
+            target="_blank"
+            className="flex w-full flex-1 shrink grow cursor-pointer flex-col"
+          >
             {/* Accommodation type */}
             <div className="flex-1">
               <span className="rounded-[6px] border-1 px-1 py-[1px] text-[12px] font-light">
@@ -118,15 +175,13 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
                       <div className="mt-1 ml-2 flex items-center text-[13px]">
                         {accommodation.bed_names &&
                         accommodation.bed_names.length > 1 ? (
-                          <div className="flex items-center gap-1">
-                            <span className="text-xl">
-                              <FaBed />
-                            </span>
+                          <span className="flex items-start gap-1">
+                            <FaBed className="mr-" size={20} />
                             <span>
                               {accommodation.total_beds} giường (
                               {accommodation.bed_names.map((bed, index) => (
                                 <span key={index}>
-                                  {bed}
+                                  {bed.quantity} {bed.bed_type_name}
                                   {index < accommodation.bed_names.length - 1
                                     ? ", "
                                     : ""}
@@ -134,31 +189,20 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
                               ))}
                               )
                             </span>
-                          </div>
+                          </span>
                         ) : (
-                          <div className="flex items-center gap-1">
-                            <span className="text-xl">
-                              <FaBed />
-                            </span>
-                            <span>
-                              {accommodation.total_beds}{" "}
-                              {accommodation.bed_names &&
-                                accommodation.bed_names[0]}
-                            </span>
-                          </div>
+                          <span className="flex items-center">
+                            <FaBed className="mr-1" size={20} />
+                            {accommodation.total_beds}{" "}
+                            {accommodation.bed_names &&
+                              accommodation.bed_names[0].bed_type_name}
+                          </span>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Features (optional) */}
-              {property?.breakfastIncluded && (
-                <div className="mb-2 text-sm font-medium text-green-600">
-                  Bữa sáng miễn phí
-                </div>
-              )}
             </div>
 
             {/* Bottom section with CTA and Price */}
@@ -173,18 +217,15 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
                       : ""}
                   </div>
                   <div className="flex items-center justify-end">
-                    <div className="text-xl font-bold">
+                    <div className="text-xl font-[400]">
                       {formatPrice(property.total_price)}
                     </div>
                     <BsInfoCircle className="ml-1 text-gray-400" size={14} />
                   </div>
-                  <span className="text-xs text-gray-500">
-                    {property?.taxAndFee}
-                  </span>
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </div>

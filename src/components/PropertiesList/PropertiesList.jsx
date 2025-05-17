@@ -173,7 +173,7 @@ const PropertiesList = (props) => {
           {props.propertiesList.map((property) =>
             isHorizontal ? (
               <PropertiesHorizontalItem
-                key={property.id}
+                key={property.properties_id}
                 property={property}
                 getRatingText={getRatingText}
               />

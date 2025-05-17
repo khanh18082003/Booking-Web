@@ -407,6 +407,7 @@ const FormSearchBox = ({ showTitle }) => {
                   </div>
                   <input
                     type="text"
+                    autoComplete="off"
                     name="destination"
                     onChange={handleOnChange}
                     onFocus={() => setIsVisible(true)}

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "../../utils/axiosCustomize";
 import { useParams } from "react-router-dom";
-import { IoHomeOutline } from "react-icons/io5";
-
+import { IoClose, IoHomeOutline, IoPersonSharp } from "react-icons/io5";
+import { resizeSvg } from "../../utils/convertIconToSVG";
 const SEARCH_PARAMS_KEY = "booking_search_params";
 
 const InfoPricingContent = () => {
@@ -64,7 +64,7 @@ const InfoPricingContent = () => {
   return (
     <div className="p-6">
       <h2 className="mb-4 text-xl font-bold">Thông tin & giá</h2>
-      <div className="overflow-hidden rounded-md border">
+      <div className="overflow-hidden rounded-md">
         {loading ? (
           <div className="p-4 text-center">Đang tải dữ liệu...</div>
         ) : error ? (
@@ -93,15 +93,18 @@ const InfoPricingContent = () => {
               </thead>
               <tbody>
                 {accommodations.map((acc) => (
-                  <tr key={acc.accommodation_id} className="border-b">
-                    <td className="border-r border-[#57a6f4] p-4">
+                  <tr
+                    key={acc.accommodation_id}
+                    className="border-b border-third"
+                  >
+                    <td className="w-[30%] border-r border-[#57a6f4] p-4">
                       <div>
                         <p className="mb-1 font-medium text-blue-600">
                           {acc.name}
                         </p>
                         {acc.rooms.map((room, idx) => (
                           <p key={idx} className="text-sm">
-                            {room.room_name}:{" "}
+                            <span className="font-bold">{room.room_name}</span>:{" "}
                             {room.beds
                               .map(
                                 (bed) =>
@@ -111,7 +114,7 @@ const InfoPricingContent = () => {
                           </p>
                         ))}
                         {acc.size && (
-                          <span className="mt-1 flex items-center text-xs text-gray-500">
+                          <span className="mt-1 flex items-center text-xs text-gray-600">
                             <IoHomeOutline className="mr-1" />
                             Diện tích: {acc.size} m²
                           </span>
@@ -120,32 +123,51 @@ const InfoPricingContent = () => {
                           {acc.amenities.map((am, i) => (
                             <span
                               key={i}
-                              className="inline-block rounded border border-blue-200 bg-blue-100 px-2 py-1 text-xs text-blue-700"
+                              className="flex items-center gap-1 rounded border border-blue-200 bg-blue-100 px-1 py-1 text-xs text-blue-700"
                             >
-                              {am.name}
+                              <div
+                                dangerouslySetInnerHTML={{
+                                  __html: resizeSvg(am.icon, 16, 16),
+                                }}
+                              />
+                              <span>{am.name}</span>
                             </span>
                           ))}
                         </div>
                       </div>
                     </td>
                     <td className="border-r border-[#57a6f4] p-4">
-                      <span className="mr-1">
-                        {acc.capacity > 4
-                          ? `${acc.capacity} x 👤`
-                          : Array(acc.capacity).fill("👤").join("")}
+                      <span className="mr-1 flex items-center">
+                        {acc.capacity > 4 ? (
+                          <>
+                            <IoPersonSharp size={18} />
+                            <IoClose size={12} />
+                            <span className="font-[400]">{acc.capacity}</span>
+                          </>
+                        ) : (
+                          Array(acc.capacity)
+                            .fill()
+                            .map((_, i) => (
+                              <IoPersonSharp
+                                key={i}
+                                className="inline-block"
+                                size={20}
+                              />
+                            ))
+                        )}
                       </span>
                     </td>
-                    <td className="border-r border-[#57a6f4] p-4 text-right">
+                    <td className="w-[20%] border-r border-[#57a6f4] p-4 text-left">
                       <span className="font-semibold text-blue-600">
                         {typeof acc.total_price === "number"
-                          ? acc.total_price.toLocaleString() + "₫"
+                          ? "VND " + acc.total_price.toLocaleString()
                           : "--"}
                       </span>
                     </td>
-                    <td className="border-r border-[#57a6f4] p-4 text-right">
+                    <td className="border-r border-[#57a6f4] p-4 text-left">
                       <span>{acc.available_rooms}</span>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="w-[5%] p-4 text-right">
                       <select
                         className="rounded border px-2 py-1 focus:ring-2 focus:ring-blue-500"
                         value={selectedRooms?.[acc.accommodation_id] ?? 0}
@@ -188,7 +210,7 @@ const InfoPricingContent = () => {
                   ₫
                 </span>
                 <button
-                  className="rounded-md bg-green-600 px-4 py-2 font-semibold text-white shadow hover:bg-green-700"
+                  className="cursor-pointer rounded-md bg-third px-4 py-2 font-semibold text-white shadow duration-200 hover:bg-secondary"
                   onClick={() => {
                     const summary = accommodations
                       .filter(

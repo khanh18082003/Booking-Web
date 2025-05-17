@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { IoLocationOutline } from "react-icons/io5";
 import { BsInfoCircle } from "react-icons/bs";
 import { AiOutlineArrowRight } from "react-icons/ai";
 import { FiHeart } from "react-icons/fi";
@@ -48,7 +47,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
         {/* Content section */}
         <div className="ml-4 flex flex-1 flex-col gap-1.5 py-1">
           {/* Top section */}
-          <div className="flex items-start justify-between">
+          <div className="mb-3 flex items-start justify-between">
             {/* Hotel name and location */}
             <div className="flex-1">
               <div className="flex items-center">
@@ -71,7 +70,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
                   {`${property.district} ${property.district && ","} ${property.city}`}
                 </Link>
                 <Link
-                  to={`/map/${property.properties_id}/${property.properties_name}`}
+                  to={`/properties/${property.properties_id}/${property.properties_name}`}
                   target="_blank"
                   className="ml-2 text-[#006ce4] underline"
                 >
@@ -85,38 +84,36 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
                     : `${property.distance} m`}
                 </span>
               </div>
-
-              {/* Tags section */}
-              <div className="mt-2 flex items-center">
-                {property.beachDistance && (
-                  <div className="mr-2 flex items-center text-xs text-gray-600">
-                    <IoLocationOutline className="mr-0.5" />
-                    <span>Cách bãi biển {property.beachDistance}</span>
-                  </div>
-                )}
-                {property.specialTag && (
-                  <div className="ml-1 inline-flex items-center rounded bg-[#008009] px-2 py-0.5 text-xs font-medium text-white">
-                    {property.specialTag}
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Rating section */}
             <div className="flex items-center">
-              <div className="mr-2 text-right">
-                <div className="font-medium">
-                  {getRatingText(property.rating)}
+              {property.rating > 0 ? (
+                <>
+                  <div className="mr-2 text-right">
+                    <div className="font-medium">
+                      {getRatingText(property.rating)}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {property.total_rating} đánh giá
+                    </div>
+                  </div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-tl-md rounded-tr-md rounded-br-md bg-[#003b95]">
+                    <span className="text-sm font-bold text-white">
+                      {property.rating}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <div>
+                    <span className="text-md">Chưa có điểm đánh giá</span>
+                  </div>
+                  <div className="rounded-[6px] bg-fifth px-1 py-[1px]">
+                    <span className="text-[12px]">Mới trên Booking.com</span>
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500">
-                  {property.total_rating} đánh giá
-                </div>
-              </div>
-              <div className="flex h-8 w-8 items-center justify-center rounded-tl-md rounded-tr-md rounded-br-md bg-[#003b95]">
-                <span className="text-sm font-bold text-white">
-                  {property.rating}
-                </span>
-              </div>
+              )}
             </div>
           </div>
 
@@ -189,7 +186,7 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
                 </div>
 
                 <div className="flex items-center justify-end">
-                  <div className="text-xl font-bold">
+                  <div className="text-xl font-[400]">
                     {formatPrice(property.total_price)}
                   </div>
                   <BsInfoCircle className="ml-1 text-gray-400" size={14} />
