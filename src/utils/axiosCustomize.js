@@ -52,8 +52,16 @@ instance.interceptors.request.use(
       "/auth/verify-email",
       "/auth/refresh-token",
       "/auth/logout",
+      "/auth/check-exist-email",
+      "/users/forgot-password",
+      "/users/reset-password",
       "/re-send-mail",
       "/properties/search",
+      "/properties/{id}",
+      "/properties/{id}/accommodations",
+      "/properties/{id}/reviews",
+      "/locations",
+      "/payments/check-payment-status",
     ];
 
     const isNoAuthEndpoint = noAuthEndpoints.some((endpoint) =>

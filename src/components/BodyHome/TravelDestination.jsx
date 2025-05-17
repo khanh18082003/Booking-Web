@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import axiosInstance from "../../utils/axiosCustomize";
-import axios from "axios";
+
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 
@@ -53,44 +53,11 @@ const TravelDestinationCard = ({ city, imageUrl }) => {
     setSearchParams(currentParams);
   }, []);
 
-  const fetchLatLngFromAddress = async (address) => {
-    const GOOGLE_MAP_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    try {
-      const res = await axios.get(
-        "https://maps.googleapis.com/maps/api/geocode/json",
-        {
-          params: {
-            address: address,
-            key: GOOGLE_MAP_API_KEY,
-          },
-        },
-      );
-
-      if (res.data.status === "OK" && res.data.results.length > 0) {
-        const location = res.data.results[0].geometry.location;
-        return { lat: location.lat, lng: location.lng };
-      } else {
-        console.error("Không tìm thấy địa chỉ:", res.data.status);
-        return null;
-      }
-    } catch (error) {
-      console.error("Lỗi gọi Geocoding API:", error);
-      return null;
-    }
-  };
-
   const handleClickCard = async () => {
     // Update destination in search params and save to localStorage
     const updatedParams = { ...searchParams, destination: city };
     saveSearchParamsToStorage(updatedParams);
     setSearchParams(updatedParams);
-
-    const latlng = await fetchLatLngFromAddress(city);
-
-    if (!latlng) {
-      alert("Không tìm thấy vị trí, vui lòng thử lại!");
-      return;
-    }
 
     // Get latest params from storage to ensure we have the most recent values
     const currentParams = getSearchParamsFromStorage();
@@ -101,8 +68,7 @@ const TravelDestinationCard = ({ city, imageUrl }) => {
       // Call API tìm kiếm with parameters from local storage
       const response = await axiosInstance.get(`/properties/search`, {
         params: {
-          latitude: latlng.lat,
-          longitude: latlng.lng,
+          location: city,
           start_date: startDate,
           end_date: endDate,
           adults: currentParams.adults,
@@ -118,10 +84,6 @@ const TravelDestinationCard = ({ city, imageUrl }) => {
           state: {
             propertiesList: response.data.data.data,
             total: response.data.data.meta.total,
-            location: {
-              lat: latlng.lat,
-              lng: latlng.lng,
-            },
             destination: city,
           },
         },

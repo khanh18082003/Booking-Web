@@ -220,23 +220,7 @@ const PropertiesMap = ({ properties = [] }) => {
           options={mapOptions}
           onLoad={onLoad}
           onUnmount={onUnmount}
-        >
-          {/* Property markers if available */}
-          {properties.map(
-            (property) =>
-              property.latitude &&
-              property.longitude && (
-                <Marker
-                  key={property.id}
-                  position={{
-                    lat: Number(property.latitude),
-                    lng: Number(property.longitude),
-                  }}
-                  title={property.name}
-                />
-              ),
-          )}
-        </GoogleMap>
+        ></GoogleMap>
       </div>
 
       <div className="absolute top-[64%] left-[50%] flex w-full translate-x-[-50%] transform justify-center">

@@ -69,7 +69,19 @@ const getSearchParamsFromStorage = () => {
 
 const saveSearchParamsToStorage = (params) => {
   try {
-    localStorage.setItem(SEARCH_PARAMS_KEY, JSON.stringify(params));
+    // Create a copy to avoid modifying the original object
+    const paramsToSave = { ...params };
+
+    // Format dates as yyyy-MM-dd strings to avoid timezone issues
+    if (paramsToSave.startDate instanceof Date) {
+      paramsToSave.startDate = format(paramsToSave.startDate, "yyyy-MM-dd");
+    }
+
+    if (paramsToSave.endDate instanceof Date) {
+      paramsToSave.endDate = format(paramsToSave.endDate, "yyyy-MM-dd");
+    }
+
+    localStorage.setItem(SEARCH_PARAMS_KEY, JSON.stringify(paramsToSave));
   } catch (error) {
     console.error("Error saving to localStorage:", error);
   }
