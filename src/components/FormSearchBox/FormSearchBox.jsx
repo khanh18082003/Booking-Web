@@ -173,8 +173,8 @@ const FormSearchBox = ({ showTitle }) => {
   useEffect(() => {
     const params = {
       destination: inputChange,
-      startDate: date.startDate.toISOString(),
-      endDate: date.endDate.toISOString(),
+      startDate: date.startDate,
+      endDate: date.endDate,
       adults: numbers.adults.valueNow,
       children: numbers.children.valueNow,
       rooms: numbers.rooms.valueNow,
@@ -287,8 +287,8 @@ const FormSearchBox = ({ showTitle }) => {
 
     saveSearchParamsToStorage({
       destination,
-      startDate: date.startDate.toISOString(),
-      endDate: date.endDate.toISOString(),
+      startDate: date.startDate,
+      endDate: date.endDate,
       adults,
       children,
       rooms,

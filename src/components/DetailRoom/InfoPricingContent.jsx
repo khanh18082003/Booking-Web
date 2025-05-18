@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "../../utils/axiosCustomize";
 import { useParams } from "react-router-dom";
 import { IoClose, IoHomeOutline, IoPersonSharp } from "react-icons/io5";
 import { resizeSvg } from "../../utils/convertIconToSVG";
+import BookingTooltip from "./BookingTooltip";
+import PropTypes from "prop-types";
 const SEARCH_PARAMS_KEY = "booking_search_params";
 
-const InfoPricingContent = () => {
+const InfoPricingContent = ({ hotelData }) => {
   const [accommodations, setAccommodations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRooms, setSelectedRooms] = useState({});
+  const [showTooltip, setShowTooltip] = useState(false);
+  const buttonRef = useRef(null);
   const { id } = useParams();
 
   const getSearchParamsFromStorage = () => {
@@ -36,7 +40,16 @@ const InfoPricingContent = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `/properties/${propertyId}/accommodations?start_date=${start_date}&end_date=${end_date}&rooms=${rooms}&adults=${adults}&children=${children}`,
+          `/properties/${propertyId}/accommodations`,
+          {
+            params: {
+              start_date,
+              end_date,
+              rooms,
+              adults,
+              children,
+            },
+          },
         );
         if (response.data.code === "M000") {
           const accommodationsData = response.data.data;
@@ -209,24 +222,39 @@ const InfoPricingContent = () => {
                     .toLocaleString()}
                   ₫
                 </span>
-                <button
-                  className="cursor-pointer rounded-md bg-third px-4 py-2 font-semibold text-white shadow duration-200 hover:bg-secondary"
-                  onClick={() => {
-                    const summary = accommodations
-                      .filter(
-                        (acc) => selectedRooms?.[acc.accommodation_id] > 0,
-                      )
-                      .map((acc) => {
-                        const quantity =
-                          selectedRooms?.[acc.accommodation_id] || 0;
-                        return `• ${quantity} phòng ${acc.name}`;
-                      })
-                      .join("\n");
-                    alert(`Đặt các phòng:\n${summary}`);
-                  }}
-                >
-                  Tôi đã đặt
-                </button>
+                <div className="relative">
+                  <button
+                    ref={buttonRef}
+                    className="cursor-pointer rounded-md bg-third px-4 py-2 font-semibold text-white shadow duration-200 hover:bg-secondary"
+                    onClick={() => {
+                      const summary = accommodations
+                        .filter(
+                          (acc) => selectedRooms?.[acc.accommodation_id] > 0,
+                        )
+                        .map((acc) => {
+                          const quantity =
+                            selectedRooms?.[acc.accommodation_id] || 0;
+                          return `• ${quantity} phòng ${acc.name}`;
+                        })
+                        .join("\n");
+                      alert(`Đặt các phòng:\n${summary}`);
+                    }}
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                  >
+                    Tôi đã đặt
+                  </button>
+
+                  <BookingTooltip
+                    propertyName={hotelData.name}
+                    accommodationInfo={accommodations.filter(
+                      (acc) => selectedRooms?.[acc.accommodation_id] > 0,
+                    )}
+                    checkIn={start_date}
+                    checkOut={end_date}
+                    isVisible={showTooltip}
+                  />
+                </div>
               </div>
             )}
           </>
@@ -234,6 +262,11 @@ const InfoPricingContent = () => {
       </div>
     </div>
   );
+};
+InfoPricingContent.propTypes = {
+  hotelData: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+  }).isRequired,
 };
 
 export default InfoPricingContent;
