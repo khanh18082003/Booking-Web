@@ -13,8 +13,10 @@ const InfoPricingContent = ({ hotelData }) => {
   const [error, setError] = useState(null);
   const [selectedRooms, setSelectedRooms] = useState({});
   const [showTooltip, setShowTooltip] = useState(false);
+  const [selectedAcc, setSelectedAcc] = useState(null);
   const buttonRef = useRef(null);
   const { id } = useParams();
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
 
   const getSearchParamsFromStorage = () => {
     try {
@@ -33,7 +35,9 @@ const InfoPricingContent = ({ hotelData }) => {
   const rooms = params?.rooms;
   const adults = params?.adults;
   const children = params?.children;
-
+  const nights = Math.ceil(
+    (new Date(end_date) - new Date(start_date)) / (1000 * 60 * 60 * 24),
+  );
   useEffect(() => {
     const fetchAccommodations = async () => {
       if (!propertyId) return;
@@ -112,7 +116,11 @@ const InfoPricingContent = ({ hotelData }) => {
                   >
                     <td className="w-[30%] border-r border-[#57a6f4] p-4">
                       <div>
-                        <p className="mb-1 font-medium text-blue-600">
+                        <p
+                          className="mb-1 font-medium text-blue-600 hover:underline"
+                          onClick={() => setSelectedAcc(acc)}
+                          style={{ cursor: "pointer" }}
+                        >
                           {acc.name}
                         </p>
                         {acc.rooms.map((room, idx) => (
@@ -260,9 +268,113 @@ const InfoPricingContent = ({ hotelData }) => {
           </>
         )}
       </div>
+      {selectedAcc && (
+        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-xl md:flex-row">
+            {/* Ảnh lớn bên trái */}
+            <div className="flex w-full flex-col items-center p-4 md:w-[55%]">
+              <img
+                src={
+                  selectedAcc.image_urls?.[selectedImageIdx] ||
+                  selectedAcc.image_urls?.[0]
+                }
+                alt="Ảnh phòng lớn"
+                className="mb-4 h-[250px] w-full rounded-lg object-cover md:h-[400px]"
+              />
+
+              {/* Thumbnail ảnh nhỏ */}
+              <div className="grid w-full grid-cols-4 gap-2">
+                {selectedAcc.image_urls?.map((img, idx) => (
+                  <img
+                    key={idx}
+                    src={img}
+                    alt={`img-${idx}`}
+                    className={`h-20 w-full cursor-pointer rounded-md border-2 ${
+                      selectedImageIdx === idx
+                        ? "border-blue-500"
+                        : "border-transparent"
+                    } object-cover`}
+                    onClick={() => setSelectedImageIdx(idx)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Thông tin bên phải */}
+            <div className="relative flex w-full flex-col justify-between p-6 md:w-[45%]">
+              {/* Nút đóng */}
+              <button
+                className="absolute top-4 right-4 text-xl text-gray-500 hover:text-black"
+                onClick={() => setSelectedAcc(null)}
+              >
+                &times;
+              </button>
+
+              {/* Nội dung cuộn */}
+              <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {selectedAcc.name}
+                </h2>
+                {selectedAcc.size && (
+                  <div className="flex items-center text-sm text-gray-600">
+                    <IoHomeOutline className="mr-1" />
+                    Diện tích: {selectedAcc.size} m²
+                  </div>
+                )}
+
+                <div className="space-y-1 text-sm">
+                  {selectedAcc.rooms?.map((room, idx) => (
+                    <div key={idx}>
+                      <span className="font-semibold">{room.room_name}:</span>{" "}
+                      {room.beds
+                        .map((bed) => `${bed.quantity} ${bed.bed_type_name}`)
+                        .join(", ")}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Tiện nghi */}
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {selectedAcc.amenities?.map((am, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-xs text-blue-600"
+                    >
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: resizeSvg(am.icon, 14, 14),
+                        }}
+                      />
+                      <span>{am.name}</span>
+                    </span>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-500">
+                  {selectedAcc.description}
+                </p>
+              </div>
+
+              {/* Phần đặt ngay */}
+              <div className="mt-4 flex items-center justify-between border-t pt-4">
+                <span className="text-lg font-bold text-green-700">
+                  VND {Number(selectedAcc.total_price).toLocaleString()} cho{" "}
+                  {nights || 1} đêm
+                </span>
+                <button
+                  className="ml-4 rounded bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                  onClick={() => alert("Đặt ngay!")}
+                >
+                  Đặt ngay
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 InfoPricingContent.propTypes = {
   hotelData: PropTypes.shape({
     name: PropTypes.string.isRequired,
