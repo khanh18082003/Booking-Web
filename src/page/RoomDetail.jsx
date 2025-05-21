@@ -30,7 +30,7 @@ const RoomDetail = () => {
     { id: "amenities", label: "Tiện nghi" },
     { id: "rules", label: "Quy tắc chung" },
     { id: "notes", label: "Ghi chú" },
-    { id: "reviews", label: "Đánh giá của khách", count: 570 },
+    { id: "reviews", label: "Đánh giá của khách" },
   ];
 
   // Get property id from URL
