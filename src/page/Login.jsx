@@ -42,9 +42,6 @@ const Login = () => {
       // Then make the actual API call
       startApiCall(); // Start loading state
 
-      // Simulate a delay of 10 seconds
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
       const response = await axios.post("/auth/login", {
         email: formData.email,
         password: formData.password,

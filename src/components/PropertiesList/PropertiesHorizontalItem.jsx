@@ -4,7 +4,11 @@ import { BsInfoCircle } from "react-icons/bs";
 import { AiOutlineArrowRight } from "react-icons/ai";
 import { FiHeart } from "react-icons/fi";
 
-const PropertiesHorizontalItem = ({ property, getRatingText }) => {
+const PropertiesHorizontalItem = ({
+  property,
+  getRatingText,
+  searchParams,
+}) => {
   // formatting VND price
   const formatPrice = (price) => {
     if (!price && price !== 0) return "VND 0";
@@ -20,13 +24,17 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
     // Return with VND at the beginning
     return `VND ${formattedNumber}`;
   };
+
   return (
     <div className="my-4 overflow-hidden rounded-xl border border-[#e7e7e7] bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex">
         {/* Image section - improved styling */}
         <div className="relative h-[240px] w-[240px] flex-shrink-0 overflow-hidden">
           <Link
-            to={`/properties/${property.properties_id}/${property.properties_name}`}
+            to={{
+              pathname: `/properties/${property.properties_id}/${property.properties_name}/overview`,
+              search: searchParams,
+            }}
             target="_blank"
             className="block h-full w-full"
           >
@@ -52,7 +60,10 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
             <div className="flex-1">
               <div className="flex items-center">
                 <Link
-                  to={`/properties/${property.properties_id}/${property.properties_name}`}
+                  to={{
+                    pathname: `/properties/${property.properties_id}/${property.properties_name}/overview`,
+                    search: searchParams,
+                  }}
                   target="_blank"
                 >
                   <h3 className="text-xl font-bold text-[#006ce4] hover:text-[#00487a] active:text-[#b10a0a]">
@@ -63,14 +74,20 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
 
               <div className="mt-1 flex items-center text-[12px]">
                 <Link
-                  to={`/properties/${property.properties_id}/${property.properties_name}`}
+                  to={{
+                    pathname: `/properties/${property.properties_id}/${property.properties_name}/overview`,
+                    search: searchParams,
+                  }}
                   target="_blank"
                   className="text-[#006ce4] underline"
                 >
                   {`${property.district} ${property.district && ","} ${property.city}`}
                 </Link>
                 <Link
-                  to={`/properties/${property.properties_id}/${property.properties_name}`}
+                  to={{
+                    pathname: `/properties/${property.properties_id}/${property.properties_name}/overview`,
+                    search: searchParams,
+                  }}
                   target="_blank"
                   className="ml-2 text-[#006ce4] underline"
                 >
@@ -196,7 +213,10 @@ const PropertiesHorizontalItem = ({ property, getRatingText }) => {
                 </div>
               </div>
               <Link
-                to={`/properties/${property.properties_id}/${property.properties_name}`}
+                to={{
+                  pathname: `/properties/${property.properties_id}/${property.properties_name}/overview`,
+                  search: searchParams,
+                }}
                 target="_blank"
                 className="mt-2 flex items-center justify-center rounded-md bg-[#006ce4] px-4 py-2 font-medium text-white hover:bg-[#00487a]"
               >
@@ -249,6 +269,7 @@ PropertiesHorizontalItem.propTypes = {
     taxAndFee: PropTypes.string,
   }).isRequired,
   getRatingText: PropTypes.func.isRequired,
+  searchParams: PropTypes.string.isRequired, // Added prop validation for searchParams
 };
 
 export default PropertiesHorizontalItem;

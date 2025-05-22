@@ -8,6 +8,7 @@ import ReviewsContent from "../components/DetailRoom/ReviewsContent";
 import Banner from "../components/layout/Banner";
 import { useParams, useNavigate, useLocation, Outlet } from "react-router-dom";
 import axios from "../utils/axiosCustomize";
+import { setPageTitle } from "../utils/pageTitle";
 
 const RoomDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -24,6 +25,9 @@ const RoomDetail = () => {
   const path = location.pathname.split("/");
   const activeTab = path[path.length - 1] || "overview";
 
+  // Preserve the search parameters when switching tabs
+  const searchParams = location.search;
+
   const tabs = [
     { id: "overview", label: "Tổng quan" },
     { id: "info", label: "Thông tin & giá" },
@@ -35,7 +39,9 @@ const RoomDetail = () => {
 
   // Get property id from URL
   const { id, propertiesName } = useParams();
-
+  useEffect(() => {
+    setPageTitle(propertiesName);
+  }, []);
   // Fetch property data from API
   useEffect(() => {
     const fetchPropertyDetails = async () => {
@@ -90,7 +96,7 @@ const RoomDetail = () => {
 
   // Function to handle tab changes
   const handleTabChange = (tabId) => {
-    navigate(`/properties/${id}/${propertiesName}/${tabId}`);
+    navigate(`/properties/${id}/${propertiesName}/${tabId}${searchParams}`);
   };
 
   // Function to render the appropriate content based on active tab

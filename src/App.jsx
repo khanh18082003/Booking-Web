@@ -15,6 +15,9 @@ import Profile from "./page/Profile";
 import Personal from "./page/Personal";
 import ForgotPassword from "./page/ForgotPassword";
 import ResetPassword from "./page/ResetPassword";
+import BookingConfirmation from "./page/BookingConfirmation";
+import FinishedBooking from "./page/FinishedBooking";
+import BookingSuccess from "./page/BookingSuccess";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -44,8 +47,6 @@ function App() {
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Home />} />
-
-          {/* Hotel detail routes with nested tab routes */}
           <Route path="properties/:id/:propertiesName" element={<RoomDetail />}>
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={null} />
@@ -55,7 +56,12 @@ function App() {
             <Route path="notes" element={null} />
             <Route path="reviews" element={null} />
           </Route>
-
+          <Route
+            path="properties/:id/:propertiesName/booking-confirmation"
+            element={<BookingConfirmation />}
+          />
+          <Route path="booking/:id" element={<FinishedBooking />} />
+          <Route path="booking/success" element={<BookingSuccess />} />
           <Route path="myaccount" element={<Profile />} />
           <Route path="myaccount/personal" element={<Personal />} />
           <Route path="searchresults" element={<Properties />} />

@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "../../utils/axiosCustomize";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { IoClose, IoHomeOutline, IoPersonSharp } from "react-icons/io5";
 import { resizeSvg } from "../../utils/convertIconToSVG";
 import BookingTooltip from "./BookingTooltip";
 import PropTypes from "prop-types";
-const SEARCH_PARAMS_KEY = "booking_search_params";
 
 const InfoPricingContent = ({ hotelData }) => {
   const [accommodations, setAccommodations] = useState([]);
@@ -15,34 +14,33 @@ const InfoPricingContent = ({ hotelData }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [selectedAcc, setSelectedAcc] = useState(null);
   const buttonRef = useRef(null);
-  const { id } = useParams();
+
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
 
-  const getSearchParamsFromStorage = () => {
-    try {
-      const params = localStorage.getItem(SEARCH_PARAMS_KEY);
-      return params ? JSON.parse(params) : null;
-    } catch (error) {
-      console.error("Error reading from localStorage:", error);
-      return null;
-    }
-  };
+  const { id, propertiesName } = useParams();
+  const navigation = useNavigate();
 
-  const params = getSearchParamsFromStorage();
+  const location = useLocation();
+  const searchParams = location.search;
+
   const propertyId = id;
-  const start_date = new Date(params?.startDate).toISOString().split("T")[0];
-  const end_date = new Date(params?.endDate).toISOString().split("T")[0];
-  const rooms = params?.rooms;
-  const adults = params?.adults;
-  const children = params?.children;
+
+  const params = new URLSearchParams(searchParams);
+  const start_date = params.get("checkin");
+  const end_date = params.get("checkout");
+  const rooms = params.get("rooms");
+  const adults = params.get("adults");
+  const children = params.get("children");
   const nights = Math.ceil(
     (new Date(end_date) - new Date(start_date)) / (1000 * 60 * 60 * 24),
   );
+
   useEffect(() => {
     const fetchAccommodations = async () => {
       if (!propertyId) return;
       try {
         setLoading(true);
+
         const response = await axios.get(
           `/properties/${propertyId}/accommodations`,
           {
@@ -219,7 +217,7 @@ const InfoPricingContent = ({ hotelData }) => {
             {totalRoomsSelected > 0 && (
               <div className="mt-4 flex items-center justify-between px-4">
                 <span className="text-lg font-semibold text-blue-700">
-                  Tổng giá:{" "}
+                  Tổng giá: VND {""}
                   {accommodations
                     .reduce((total, acc) => {
                       const quantity =
@@ -228,29 +226,46 @@ const InfoPricingContent = ({ hotelData }) => {
                       return total + quantity * price;
                     }, 0)
                     .toLocaleString()}
-                  ₫
                 </span>
                 <div className="relative">
                   <button
                     ref={buttonRef}
                     className="cursor-pointer rounded-md bg-third px-4 py-2 font-semibold text-white shadow duration-200 hover:bg-secondary"
-                    onClick={() => {
-                      const summary = accommodations
-                        .filter(
-                          (acc) => selectedRooms?.[acc.accommodation_id] > 0,
-                        )
-                        .map((acc) => {
-                          const quantity =
-                            selectedRooms?.[acc.accommodation_id] || 0;
-                          return `• ${quantity} phòng ${acc.name}`;
-                        })
-                        .join("\n");
-                      alert(`Đặt các phòng:\n${summary}`);
-                    }}
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
+                    onClick={() => {
+                      setShowTooltip(false);
+                      navigation(
+                        {
+                          pathname: `/properties/${propertyId}/${propertiesName}/booking-confirmation`,
+                          search: `${searchParams}`,
+                        },
+                        {
+                          state: {
+                            hotelData: hotelData,
+                            accommodations: accommodations
+                              .filter(
+                                (acc) =>
+                                  selectedRooms?.[acc.accommodation_id] > 0,
+                              )
+                              .map((acc) => ({
+                                ...acc,
+                                quantity: selectedRooms?.[acc.accommodation_id],
+                              })),
+                            totalPrice: accommodations
+                              .reduce((total, acc) => {
+                                const quantity =
+                                  selectedRooms?.[acc.accommodation_id] || 0;
+                                const price = acc.total_price || 0;
+                                return total + quantity * price;
+                              }, 0)
+                              .toLocaleString(),
+                          },
+                        },
+                      );
+                    }}
                   >
-                    Tôi đã đặt
+                    Tôi sẽ đặt
                   </button>
 
                   <BookingTooltip

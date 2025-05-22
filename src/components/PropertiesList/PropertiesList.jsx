@@ -5,7 +5,7 @@ import PropertiesVerticalItem from "./PropertiesVerticalItem";
 import { BsGrid3X3Gap } from "react-icons/bs";
 import { FaListUl } from "react-icons/fa";
 import { RiArrowDropDownLine, RiArrowUpDownFill } from "react-icons/ri";
-
+import { getRatingText } from "../../utils/utility";
 const VIEW_MODE_KEY = "properties-view-mode";
 
 const PropertiesList = (props) => {
@@ -48,19 +48,6 @@ const PropertiesList = (props) => {
     "Xếp hạng chỗ nghỉ (thấp đến cao)",
     "Xếp hạng chỗ nghỉ và giá",
   ];
-
-  const getRatingText = (rating) => {
-    switch (true) {
-      case rating >= 9.5:
-        return "Xuất sắc";
-      case rating >= 8.0:
-        return "Rất tốt";
-      case rating >= 7.0:
-        return "Tốt";
-      default:
-        return "Trung bình";
-    }
-  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -176,12 +163,14 @@ const PropertiesList = (props) => {
                 key={property.properties_id}
                 property={property}
                 getRatingText={getRatingText}
+                searchParams={props.searchParams}
               />
             ) : (
               <PropertiesVerticalItem
                 key={property.id}
                 property={property}
                 getRatingText={getRatingText}
+                searchParams={props.searchParams}
               />
             ),
           )}
@@ -193,9 +182,11 @@ const PropertiesList = (props) => {
 PropertiesList.propTypes = {
   propertiesList: PropTypes.array.isRequired,
   destination: PropTypes.string.isRequired,
+  total: PropTypes.number, // Add validation for total
   meta: PropTypes.shape({
     total: PropTypes.number.isRequired,
   }).isRequired,
+  searchParams: PropTypes.object, // Add validation for searchParams
 };
 
 export default PropertiesList;
