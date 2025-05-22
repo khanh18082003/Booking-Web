@@ -1,12 +1,13 @@
 import { useCallback, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { MapPin, ArrowRight } from "react-feather";
+import { Link, useLocation } from "react-router-dom";
+import { MapPin } from "react-feather";
 import PropTypes from "prop-types";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import { IoLocationOutline } from "react-icons/io5";
 import { TiLocation } from "react-icons/ti";
-import { setPageTitle } from "../../utils/pageTitle";
 import { MdOutlineChevronLeft, MdOutlineChevronRight } from "react-icons/md";
+import { getRatingText } from "../../utils/utility";
+import { resizeSvg } from "../../utils/convertIconToSVG";
 
 const containerStyle = {
   width: "100%",
@@ -27,10 +28,6 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
     lng: 106.660172,
   }); // Default to Ho Chi Minh City
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
-
-  useEffect(() => {
-    setPageTitle(hotelData.name);
-  }, []);
 
   const handleNextReview = () => {
     if (reviewsData && reviewsData.data && reviewsData.data.length > 0) {
@@ -104,7 +101,7 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
       </GoogleMap>
     );
   };
-
+  const searchParams = useLocation().search;
   return (
     <div className="mx-auto w-full">
       {/* Hotel Title and Rating */}
@@ -114,7 +111,10 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
             {hotelData.name || "Hotel Name"}
           </h1>
           <Link
-            to={`/properties/${hotelData.id}/${hotelData.name}/info`}
+            to={{
+              pathname: `/properties/${hotelData.id}/${hotelData.name}/info`,
+              search: `${searchParams}`,
+            }}
             className="flex space-x-2"
           >
             <button className="cursor-pointer rounded-md bg-third px-4 py-2 text-white duration-200 hover:bg-secondary">
@@ -296,13 +296,7 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
                   <div className="flex items-center gap-2">
                     <div className="flex flex-col">
                       <span className="text-md font-[400]">
-                        {hotelData.rating >= 9
-                          ? "Tuyệt vời"
-                          : hotelData.rating >= 8
-                            ? "Rất tốt"
-                            : hotelData.rating >= 7
-                              ? "Tốt"
-                              : "Hài lòng"}
+                        {getRatingText(hotelData.rating)}
                       </span>
                       <span className="text-sm text-gray-600">
                         {hotelData.total_rating} đánh giá
@@ -397,10 +391,7 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
           <div className="relative overflow-hidden rounded-lg border-gray-200 shadow-md">
             <div className="bg-gray-200">{renderMap()}</div>
             <div className="absolute top-[64%] left-[50%] flex w-full translate-x-[-50%] transform justify-center">
-              <button
-                className="flex h-[36px] cursor-pointer items-center justify-center gap-1 rounded-lg bg-secondary px-2 py-1 text-sm font-semibold text-white outline-third duration-200 hover:bg-third"
-                // onClick={handleOpenMapModal}
-              >
+              <button className="flex h-[36px] cursor-pointer items-center justify-center gap-1 rounded-lg bg-secondary px-2 py-1 text-sm font-semibold text-white outline-third duration-200 hover:bg-third">
                 <IoLocationOutline className="text-xl" />
                 <span>Hiển thị trên bản đồ</span>
               </button>
@@ -418,6 +409,33 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
               />{" "}
             </div>
           </div>
+        </div>
+        <div>
+          {hotelData.amenities && hotelData.amenities.length > 0 && (
+            <div className="mb-6">
+              <h3 className="mb-2 text-lg font-bold">
+                Các tiện nghi được ưa chuộng nhất
+              </h3>
+              <ul className="flex gap-2.5 pl-5">
+                {hotelData.amenities.map((amenity, index) => (
+                  <li
+                    key={index}
+                    className="m-1 flex min-w-[13%] items-center justify-start gap-2 rounded-[10px] border-1 border-gray-300 p-2 text-sm leading-11"
+                  >
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: resizeSvg(amenity.icon, 26, 26),
+                      }}
+                    />
+                    <span className="text-md">
+                      {amenity.name.charAt(0).toUpperCase() +
+                        amenity.name.slice(1)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>

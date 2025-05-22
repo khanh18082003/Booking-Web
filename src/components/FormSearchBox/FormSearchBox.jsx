@@ -130,7 +130,7 @@ const FormSearchBox = ({ showTitle }) => {
     if (searchParams.get("checkin")) {
       startDate = parse(searchParams.get("checkin"), "yyyy-MM-dd", new Date());
     } else if (storedParams?.startDate) {
-      if (storedParams.startDate < Date.now()) {
+      if (new Date(storedParams.startDate) < Date.now()) {
         startDate = new Date();
       } else {
         startDate = new Date(storedParams.startDate);
@@ -140,7 +140,7 @@ const FormSearchBox = ({ showTitle }) => {
     if (searchParams.get("checkout")) {
       endDate = parse(searchParams.get("checkout"), "yyyy-MM-dd", new Date());
     } else if (storedParams?.endDate) {
-      if (storedParams.endDate < Date.now()) {
+      if (new Date(storedParams.endDate) < Date.now()) {
         endDate = addDays(startDate, 1);
       } else {
         endDate = new Date(storedParams.endDate);
@@ -314,7 +314,6 @@ const FormSearchBox = ({ showTitle }) => {
           state: {
             propertiesList: response.data.data.data,
             total: response.data.data.meta.total,
-            destination: destination,
           },
         },
       );

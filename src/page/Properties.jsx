@@ -13,11 +13,18 @@ const Properties = () => {
   const location = useLocation();
   const total = location.state?.total || null;
   const propertiesList = location.state?.propertiesList || null;
-  const destination = location.state?.destination || null;
   useEffect(() => {
     setPageTitle(PAGE_TITLES.PROPERTIES);
   }, []);
-
+  const searchParams = new URLSearchParams(location.search);
+  const destination = searchParams.get("destination");
+  const newParams = new URLSearchParams({
+    checkin: searchParams.get("checkin"),
+    checkout: searchParams.get("checkout"),
+    adults: searchParams.get("adults"),
+    children: searchParams.get("children"),
+    rooms: searchParams.get("rooms"),
+  }).toString();
   return (
     <>
       <Banner showTitle={false} />
@@ -69,6 +76,7 @@ const Properties = () => {
           propertiesList={propertiesList}
           destination={destination}
           total={total}
+          searchParams={newParams}
         />
       </div>
     </>

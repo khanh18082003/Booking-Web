@@ -3,39 +3,7 @@ import { BsInfoCircle } from "react-icons/bs";
 import { FaBed } from "react-icons/fa";
 import { Link } from "react-router";
 
-const PropertiesVerticalItem = ({ property, getRatingText }) => {
-  PropertiesVerticalItem.propTypes = {
-    property: PropTypes.shape({
-      image: PropTypes.string.isRequired,
-      properties_name: PropTypes.string.isRequired,
-      rating: PropTypes.number.isRequired,
-      total_rating: PropTypes.number.isRequired,
-      district: PropTypes.string,
-      city: PropTypes.string,
-      distance: PropTypes.number.isRequired,
-      properties_id: PropTypes.string.isRequired,
-      accommodations: PropTypes.arrayOf(
-        PropTypes.shape({
-          accommodation_id: PropTypes.string.isRequired,
-          suggested_quantity: PropTypes.number,
-          accommodation_name: PropTypes.string.isRequired,
-          total_beds: PropTypes.number.isRequired,
-          bed_names: PropTypes.arrayOf(
-            PropTypes.shape({
-              quantity: PropTypes.number.isRequired,
-              bed_type_name: PropTypes.string.isRequired,
-            }),
-          ),
-        }),
-      ).isRequired,
-      nights: PropTypes.number.isRequired,
-      adults: PropTypes.number.isRequired,
-      children: PropTypes.number.isRequired,
-      total_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
-        .isRequired,
-    }).isRequired,
-    getRatingText: PropTypes.func.isRequired,
-  };
+const PropertiesVerticalItem = ({ property, getRatingText, searchParams }) => {
   // formatting VND price
   const formatPrice = (price) => {
     if (!price && price !== 0) return "VND 0";
@@ -55,7 +23,10 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
     <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md">
       {/* Image container with wishlist button */}
       <Link
-        to={`/properties/${property.properties_id}/${property.properties_name}`}
+        to={{
+          pathname: `/properties/${property.properties_id}/${property.properties_name}/overview`,
+          search: searchParams,
+        }}
         target="_blank"
         className="relative h-[250px] overflow-hidden"
       >
@@ -120,7 +91,10 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
             </div>
             <div className="flex flex-col items-start gap-1 text-[12px]">
               <Link
-                to={`/properties/${property.properties_id}/${property.properties_name}`}
+                to={{
+                  pathname: `/properties/${property.properties_id}/${property.properties_name}/overview`,
+                  search: searchParams,
+                }}
                 target="_blank"
               >
                 <span className="text-[12px] text-third">
@@ -145,7 +119,10 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
 
           {/* Property Detail */}
           <Link
-            to={`/properties/${property.properties_id}/${property.properties_name}`}
+            to={{
+              pathname: `/properties/${property.properties_id}/${property.properties_name}/overview`,
+              search: searchParams,
+            }}
             target="_blank"
             className="flex w-full flex-1 shrink grow cursor-pointer flex-col"
           >
@@ -230,6 +207,39 @@ const PropertiesVerticalItem = ({ property, getRatingText }) => {
       </div>
     </div>
   );
+};
+PropertiesVerticalItem.propTypes = {
+  property: PropTypes.shape({
+    image: PropTypes.string.isRequired,
+    properties_name: PropTypes.string.isRequired,
+    rating: PropTypes.number.isRequired,
+    total_rating: PropTypes.number.isRequired,
+    district: PropTypes.string,
+    city: PropTypes.string,
+    distance: PropTypes.number.isRequired,
+    properties_id: PropTypes.string.isRequired,
+    accommodations: PropTypes.arrayOf(
+      PropTypes.shape({
+        accommodation_id: PropTypes.string.isRequired,
+        suggested_quantity: PropTypes.number,
+        accommodation_name: PropTypes.string.isRequired,
+        total_beds: PropTypes.number.isRequired,
+        bed_names: PropTypes.arrayOf(
+          PropTypes.shape({
+            quantity: PropTypes.number.isRequired,
+            bed_type_name: PropTypes.string.isRequired,
+          }),
+        ),
+      }),
+    ).isRequired,
+    nights: PropTypes.number.isRequired,
+    adults: PropTypes.number.isRequired,
+    children: PropTypes.number.isRequired,
+    total_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+      .isRequired,
+  }).isRequired,
+  getRatingText: PropTypes.func.isRequired,
+  searchParams: PropTypes.string.isRequired,
 };
 
 export default PropertiesVerticalItem;

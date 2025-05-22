@@ -20,4 +20,5 @@ export const PAGE_TITLES = {
   PROFILE: "Tài khoản của tôi",
   PERSONAL: "Thông tin cá nhân",
   NOT_FOUND: "Trang không tìm thấy",
+  BOOKING_CONFIRMATION: "Xác nhận đặt phòng",
 };
