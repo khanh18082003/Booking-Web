@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../utils/axiosCustomize";
 import { useParams } from "react-router-dom";
+import { useStore } from "../../utils/AuthProvider";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const ReviewsContent = ({ isLoading: loadingProp }) => {
   const [reviews, setReviews] = useState([]);
@@ -9,6 +11,9 @@ const ReviewsContent = ({ isLoading: loadingProp }) => {
   const [page, setPage] = useState(1);
   const [showAddReview, setShowAddReview] = useState(false);
   const { id } = useParams();
+  const { store } = useStore();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [newReview, setNewReview] = useState({
     review: "",
     rating: 10,
@@ -43,6 +48,11 @@ const ReviewsContent = ({ isLoading: loadingProp }) => {
   };
 
   const handleAddReview = async (e) => {
+    if (!store.userProfile) {
+      alert("Vui lòng đăng nhập để gửi đánh giá!");
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
     e.preventDefault();
     try {
       const payload = {
