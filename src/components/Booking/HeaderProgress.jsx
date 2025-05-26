@@ -26,7 +26,7 @@ const HeaderProgress = ({ step }) => {
             <div
               className={`flex h-6 w-6 items-center justify-center rounded-full ${step === 3 ? "bg-[#006ce4]" : "bg-gray-400"} text-sm text-white`}
             >
-              {step}
+              3
             </div>
             <span className="ml-2 font-bold">Hoàn tất đặt phòng</span>
           </div>

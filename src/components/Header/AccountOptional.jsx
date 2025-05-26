@@ -5,15 +5,34 @@ import { MdPerson2 } from "react-icons/md";
 import { FaRegCommentDots, FaRegHeart } from "react-icons/fa";
 import { BiLogOutCircle } from "react-icons/bi";
 import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
 import defaultAvatar from "../../assets/default-avatar.avif"; // Import a default avatar image
 import axios from "../../utils/axiosCustomize";
 import { useStore } from "../../utils/AuthProvider";
+import { RiLuggageDepositLine } from "react-icons/ri";
 
 const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
   const containerRef = useRef(null);
   const { store, setStore } = useStore(); // Assuming you have a context or state management for auth
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+  const location = useLocation(); // Get current location
+
+  // Check if the current path requires authentication
+  const isProtectedRoute = (path) => {
+    const protectedPaths = [
+      "/myaccount",
+      "/mytrips",
+
+      "/favorites",
+
+      "/myaccount/personal",
+    ];
+
+    // Check if the current path starts with any of the protected paths
+    return protectedPaths.some((protectedPath) =>
+      path.startsWith(protectedPath),
+    );
+  };
 
   // Close the dropdown when clicking outside
   useEffect(() => {
@@ -73,6 +92,13 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
           <span className="text-base">Tài khoản</span>
         </Link>
         <Link
+          to="/mytrips"
+          className="flex items-center gap-4 px-6 py-4 hover:bg-gray-100"
+        >
+          <RiLuggageDepositLine className="text-xl" />
+          <span className="text-base">Đặt chỗ & chuyến đi</span>
+        </Link>
+        <Link
           to="/reviews"
           className="flex items-center gap-4 px-6 py-4 hover:bg-gray-100"
         >
@@ -92,23 +118,9 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
             // Call API /auth/logout
             const logout = async () => {
               try {
-                const response = await axios.post(
-                  "/auth/logout",
-                  {
-                    access_token: localStorage.getItem("accessToken"),
-                  },
-                  // {
-                  //   headers: {
-                  //     Authorization: `Bearer ${authState.accessToken}`,
-                  //   },
-                  // },
-                );
-                const data = response.data;
-                if (data.code !== "M000") {
-                  console.error("Logout failed:", data.message);
-                  return;
-                }
-                console.log("Logout successful:", data.message);
+                await axios.post("/auth/logout", {
+                  access_token: localStorage.getItem("accessToken"),
+                });
 
                 // Clear user data from local storage and context
                 localStorage.removeItem("accessToken");
@@ -117,8 +129,17 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
                   userProfile: null,
                 }));
 
-                // Redirect to Home page
-                navigate("/");
+                // Check if current page requires authentication
+                const currentPath = location.pathname;
+                console.log("Current path:", currentPath);
+                if (isProtectedRoute(currentPath)) {
+                  // Only navigate to home if we're on a protected route
+                  navigate("/");
+                }
+                // If we're on a public page, do nothing (stay on the same page)
+
+                // Close the dropdown in any case
+                closeAccountOptional();
               } catch (error) {
                 console.error(
                   "Logout failed:",
@@ -128,7 +149,7 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
             };
             logout();
           }}
-          className="flex items-center gap-4 px-6 py-4 hover:bg-gray-100"
+          className="flex cursor-pointer items-center gap-4 px-6 py-4 hover:bg-gray-100"
         >
           <BiLogOutCircle className="text-xl" />
           <span className="text-base">Đăng xuất</span>

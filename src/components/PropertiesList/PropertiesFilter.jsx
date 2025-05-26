@@ -10,7 +10,7 @@ const PropertiesFilter = () => {
   });
 
   // State for price range
-  const [priceRange, setPriceRange] = useState([50000, 2000000]);
+  const [priceRange, setPriceRange] = useState([100000, 2000000]);
 
   // Handle filter checkbox change
   const handleFilterChange = (e) => {

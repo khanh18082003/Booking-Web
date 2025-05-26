@@ -35,6 +35,23 @@ const InfoPricingContent = ({ hotelData }) => {
     (new Date(end_date) - new Date(start_date)) / (1000 * 60 * 60 * 24),
   );
 
+  // Function to create URL search params with accommodation data
+  const createSearchParamsWithAccommodations = () => {
+    const newParams = new URLSearchParams(searchParams);
+
+    // Collect all selected accommodations in a single comma-separated string
+    const accommodationEntries = Object.entries(selectedRooms)
+      .filter(([_, quantity]) => quantity > 0)
+      .map(([accId, quantity]) => `${accId}:${quantity}`);
+
+    // Only add the parameter if there are selected accommodations
+    if (accommodationEntries.length > 0) {
+      newParams.set("accommodation_ids", accommodationEntries.join(","));
+    }
+
+    return newParams.toString();
+  };
+
   useEffect(() => {
     const fetchAccommodations = async () => {
       if (!propertyId) return;
@@ -75,6 +92,26 @@ const InfoPricingContent = ({ hotelData }) => {
     (sum, value) => sum + (typeof value === "number" ? value : 0),
     0,
   );
+  const [totalPrice, setTotalPrice] = useState(0);
+  useEffect(() => {
+    setTotalPrice(
+      accommodations
+        .reduce((total, acc) => {
+          const quantity = selectedRooms?.[acc.accommodation_id] || 0;
+          const price = acc.total_price || 0;
+          return total + quantity * price;
+        }, 0)
+        .toLocaleString("vi-VN"),
+    );
+  }, [selectedRooms, accommodations]);
+
+  const handleBookingClick = () => {
+    setShowTooltip(false);
+    navigation({
+      pathname: `/properties/${propertyId}/${propertiesName}/booking-confirmation`,
+      search: `${createSearchParamsWithAccommodations()}`,
+    });
+  };
 
   return (
     <div className="p-6">
@@ -218,14 +255,7 @@ const InfoPricingContent = ({ hotelData }) => {
               <div className="mt-4 flex items-center justify-between px-4">
                 <span className="text-lg font-semibold text-blue-700">
                   Tổng giá: VND {""}
-                  {accommodations
-                    .reduce((total, acc) => {
-                      const quantity =
-                        selectedRooms?.[acc.accommodation_id] || 0;
-                      const price = acc.total_price || 0;
-                      return total + quantity * price;
-                    }, 0)
-                    .toLocaleString()}
+                  {totalPrice}
                 </span>
                 <div className="relative">
                   <button
@@ -233,37 +263,7 @@ const InfoPricingContent = ({ hotelData }) => {
                     className="cursor-pointer rounded-md bg-third px-4 py-2 font-semibold text-white shadow duration-200 hover:bg-secondary"
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
-                    onClick={() => {
-                      setShowTooltip(false);
-                      navigation(
-                        {
-                          pathname: `/properties/${propertyId}/${propertiesName}/booking-confirmation`,
-                          search: `${searchParams}`,
-                        },
-                        {
-                          state: {
-                            hotelData: hotelData,
-                            accommodations: accommodations
-                              .filter(
-                                (acc) =>
-                                  selectedRooms?.[acc.accommodation_id] > 0,
-                              )
-                              .map((acc) => ({
-                                ...acc,
-                                quantity: selectedRooms?.[acc.accommodation_id],
-                              })),
-                            totalPrice: accommodations
-                              .reduce((total, acc) => {
-                                const quantity =
-                                  selectedRooms?.[acc.accommodation_id] || 0;
-                                const price = acc.total_price || 0;
-                                return total + quantity * price;
-                              }, 0)
-                              .toLocaleString(),
-                          },
-                        },
-                      );
-                    }}
+                    onClick={handleBookingClick}
                   >
                     Tôi sẽ đặt
                   </button>
@@ -388,12 +388,6 @@ const InfoPricingContent = ({ hotelData }) => {
       )}
     </div>
   );
-};
-
-InfoPricingContent.propTypes = {
-  hotelData: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default InfoPricingContent;

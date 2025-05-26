@@ -6,7 +6,7 @@ import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 
 const VerifyEmail = () => {
   const location = useLocation();
-  const { email, password } = location.state || {};
+  const { email, password, from } = location.state || {};
   const [verificationCode, setVerificationCode] = useState(Array(6).fill(""));
   const inputRefs = useRef(Array(6).fill(null));
   const [canResend, setCanResend] = useState(false);
@@ -106,7 +106,9 @@ const VerifyEmail = () => {
               "accessToken",
               loginResponse.data.data.access_token,
             );
-            navigate("/");
+
+            // Redirect to the original page if from parameter exists, otherwise go to home
+            navigate(from || "/", { replace: true });
           } else {
             alert(`Login failed: ${loginResponse.data.message}`);
           }

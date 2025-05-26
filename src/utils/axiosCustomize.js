@@ -60,6 +60,7 @@ instance.interceptors.request.use(
       "/properties/{id}",
       "/properties/{id}/accommodations",
       "/properties/{id}/reviews",
+      "/properties/${id}/accommodations/available",
       "/locations",
       "/payments/check-payment-status",
       "/bookings",

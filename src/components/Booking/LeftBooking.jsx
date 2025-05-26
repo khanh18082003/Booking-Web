@@ -1,20 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router";
 import { resizeSvg } from "../../utils/convertIconToSVG";
 import { formatDate, getNights, getRatingText } from "../../utils/utility";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
-const LeftBooking = ({
-  hotelData,
-  accommodations,
-  adults,
-  childs,
-  checkIn,
-  checkOut,
-  totalPrice,
-  params,
-}) => {
+const LeftBooking = ({ bookingData, params }) => {
   const [showAccommodations, setShowAccommodations] = useState(false);
   const toggleAccommodations = () => {
     setShowAccommodations(!showAccommodations);
@@ -22,22 +13,24 @@ const LeftBooking = ({
   return (
     <div className="w-full space-y-4 lg:w-1/3">
       <div className="rounded-lg bg-white p-4 shadow">
-        <h2 className="text-sm font-[400]">{hotelData.property_type}</h2>
+        <h2 className="text-sm font-[400]">
+          {bookingData.properties.properties_type}
+        </h2>
         <div className="mb-4">
-          <h3 className="text-lg font-bold">{hotelData.name}</h3>
-          <p className="text-sm">{hotelData.address}</p>
-          {hotelData.total_rating > 0 ? (
+          <h3 className="text-lg font-bold">{bookingData.properties.name}</h3>
+          <p className="text-sm">{bookingData.properties.address}</p>
+          {bookingData.properties.total_rating > 0 ? (
             <div className="mt-1 flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-tl-md rounded-tr-md rounded-br-md bg-[#003b95]">
                 <span className="text-sm font-bold text-white">
-                  {hotelData.rating}
+                  {bookingData.properties.rating}
                 </span>
               </div>
               <span className="text-sm font-bold">
-                {getRatingText(hotelData.rating)}
+                {getRatingText(bookingData.properties.rating)}
               </span>
               <span className="ml-1 text-sm">
-                {hotelData.total_rating} đánh giá
+                {bookingData.properties.total_rating} đánh giá
               </span>
             </div>
           ) : (
@@ -46,7 +39,7 @@ const LeftBooking = ({
             </div>
           )}
           <div className="mt-2 flex flex-wrap gap-2">
-            {hotelData.amenities.map((amenity, index) => (
+            {bookingData.properties.amenities.map((amenity, index) => (
               <span key={index} className="flex items-center gap-1">
                 <div
                   dangerouslySetInnerHTML={{
@@ -72,9 +65,11 @@ const LeftBooking = ({
               </div>
               <div className="flex items-center">
                 <div className="flex flex-col">
-                  <div className="text-md font-bold">{formatDate(checkIn)}</div>
+                  <div className="text-md font-bold">
+                    {formatDate(bookingData.check_in)}
+                  </div>
                   <div className="text-sm text-gray-600">
-                    {hotelData.check_in_time}
+                    {bookingData.properties.check_in_time}
                   </div>
                 </div>
               </div>
@@ -85,10 +80,10 @@ const LeftBooking = ({
               <div className="flex items-center">
                 <div className="flex flex-col">
                   <div className="text-md font-bold">
-                    {formatDate(checkOut)}
+                    {formatDate(bookingData.check_out)}
                   </div>
                   <div className="text-sm text-gray-600">
-                    {hotelData.check_out_time}
+                    {bookingData.properties.check_out_time}
                   </div>
                 </div>
               </div>
@@ -98,7 +93,7 @@ const LeftBooking = ({
           <div className="text-sm">
             <span className="font-[400]">Tổng thời gian lưu trú:</span>{" "}
             <span className="text-md font-bold">
-              {getNights(checkIn, checkOut)} đêm
+              {getNights(bookingData.check_in, bookingData.check_out)} đêm
             </span>
           </div>
         </div>
@@ -111,8 +106,10 @@ const LeftBooking = ({
               </div>
               <div className="mb-1 text-sm">
                 <span className="text-[18px] font-bold">
-                  {accommodations.length} phòng cho {adults} người lớn{" "}
-                  {childs > 0 && `và ${childs} trẻ em`}
+                  {bookingData.accommodations.length} phòng cho{" "}
+                  {bookingData.adults} người lớn{" "}
+                  {bookingData.children > 0 &&
+                    `và ${bookingData.children} trẻ em`}
                 </span>
               </div>
             </div>
@@ -134,7 +131,7 @@ const LeftBooking = ({
               showAccommodations ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
             }`}
           >
-            {accommodations.map((accommodation, index) => (
+            {bookingData.accommodations.map((accommodation, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between border-b border-gray-100 py-2 text-sm last:border-0"
@@ -148,7 +145,7 @@ const LeftBooking = ({
           </div>
           <Link
             to={{
-              pathname: `/properties/${hotelData.id}/${hotelData.name}/info`,
+              pathname: `/properties/${bookingData.properties.id}/${bookingData.properties.name}/info`,
               search: `${params}`,
             }}
             className="ml-[-8px] inline max-w-[170px] cursor-pointer rounded-md px-2 py-1 duration-200 hover:bg-third/10"
@@ -161,12 +158,16 @@ const LeftBooking = ({
       <div className="rounded-lg bg-third/15 p-4 shadow">
         <h3 className="mb-2 text-lg font-bold">Tóm tắt giá</h3>
         <div className="mb-2 flex justify-between">
-          <span>Giá cho {getNights(checkIn, checkOut)} đêm</span>
+          <span>
+            Giá cho {getNights(bookingData.check_in, bookingData.check_out)} đêm
+          </span>
           <span></span>
         </div>
         <div className="flex justify-between border-t border-gray-200 pt-2 text-2xl font-bold">
           <span>Tổng cộng</span>
-          <span className="text-third">VND {totalPrice}</span>
+          <span className="text-third">
+            VND {bookingData.total_price.toLocaleString("vi-VN")}
+          </span>
         </div>
         <div className="mt-1 text-right text-xs text-gray-500">
           Đã bao gồm thuế và phí
@@ -181,30 +182,38 @@ const LeftBooking = ({
     </div>
   );
 };
+
 LeftBooking.propTypes = {
-  hotelData: PropTypes.shape({
-    property_type: PropTypes.string,
-    name: PropTypes.string,
-    address: PropTypes.string,
-    total_rating: PropTypes.number,
-    rating: PropTypes.number,
-    amenities: PropTypes.arrayOf(
+  bookingData: PropTypes.shape({
+    properties: PropTypes.shape({
+      properties_type: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      address: PropTypes.string.isRequired,
+      total_rating: PropTypes.number.isRequired,
+      rating: PropTypes.number.isRequired,
+      amenities: PropTypes.arrayOf(
+        PropTypes.shape({
+          icon: PropTypes.string.isRequired,
+          name: PropTypes.string.isRequired,
+        }),
+      ).isRequired,
+      check_in_time: PropTypes.string.isRequired,
+      check_out_time: PropTypes.string.isRequired,
+      id: PropTypes.string.isRequired,
+    }).isRequired,
+    check_in: PropTypes.string.isRequired,
+    check_out: PropTypes.string.isRequired,
+    accommodations: PropTypes.arrayOf(
       PropTypes.shape({
-        icon: PropTypes.string,
-        name: PropTypes.string,
+        quantity: PropTypes.number.isRequired,
+        name: PropTypes.string.isRequired,
       }),
-    ),
-    check_in_time: PropTypes.string,
-    check_out_time: PropTypes.string,
-    id: PropTypes.string,
+    ).isRequired,
+    adults: PropTypes.number.isRequired,
+    children: PropTypes.number.isRequired,
+    total_price: PropTypes.number.isRequired,
   }).isRequired,
-  accommodations: PropTypes.arrayOf(
-    PropTypes.shape({
-      quantity: PropTypes.number,
-      name: PropTypes.string,
-    }),
-  ).isRequired,
-  adults: PropTypes.number.isRequired,
+  params: PropTypes.string.isRequired,
 };
 
 export default LeftBooking;

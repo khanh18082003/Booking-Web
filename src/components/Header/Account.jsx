@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { memo } from "react";
 import { VscAccount } from "react-icons/vsc";
+import { useLocation } from "react-router";
 
 // Using React.memo to prevent unnecessary re-renders
 const Account = memo(({ name, avatar, toggleAccountOptional }) => {
@@ -14,7 +15,7 @@ const Account = memo(({ name, avatar, toggleAccountOptional }) => {
           <img
             src={avatar}
             alt="Avatar"
-            className="h-8 w-8 rounded-full border border-gray-300"
+            className="h-8 w-8 rounded-full border-2 border-amber-500"
           />
         ) : (
           <VscAccount className="h-full w-full font-medium" />

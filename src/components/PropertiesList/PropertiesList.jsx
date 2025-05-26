@@ -6,9 +6,12 @@ import { BsGrid3X3Gap } from "react-icons/bs";
 import { FaListUl } from "react-icons/fa";
 import { RiArrowDropDownLine, RiArrowUpDownFill } from "react-icons/ri";
 import { getRatingText } from "../../utils/utility";
+import axiosInstance from "../../utils/axiosCustomize";
+import { useLocation } from "react-router";
+
 const VIEW_MODE_KEY = "properties-view-mode";
 
-const PropertiesList = (props) => {
+const PropertiesList = () => {
   const [isHorizontal, setIsHorizontal] = useState(() => {
     // Try to get saved preference from localStorage, default to true if not found
     try {
@@ -19,13 +22,23 @@ const PropertiesList = (props) => {
       return true;
     }
   });
-
+  const [properties, setProperties] = useState({
+    data: [],
+    meta: { total: 0 },
+  });
+  const [isLoading, setIsLoading] = useState(true);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [selectedSort, setSelectedSort] = useState(
-    "Lựa chọn hàng đầu của chúng tôi",
-  );
+  const [selectedSort, setSelectedSort] = useState(0);
   const sortDropdownRef = useRef(null);
-
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const destination = queryParams.get("destination") || "Địa điểm";
+  const startDate = queryParams.get("checkin");
+  const endDate = queryParams.get("checkout");
+  const adults = queryParams.get("adults");
+  const children = queryParams.get("children");
+  const rooms = queryParams.get("rooms");
+  const [filters, setFilters] = useState();
   // Save view mode to localStorage whenever it changes
   useEffect(() => {
     try {
@@ -39,14 +52,36 @@ const PropertiesList = (props) => {
   }, [isHorizontal]);
 
   const sortOptions = [
-    "Lựa chọn hàng đầu của chúng tôi",
-    "Ưu tiên nhà & căn hộ",
-    "Giá (ưu tiên thấp nhất)",
-    "Giá (ưu tiên cao nhất)",
-    "Được đánh giá tốt nhất và có giá thấp nhất",
-    "Xếp hạng chỗ nghỉ (cao đến thấp)",
-    "Xếp hạng chỗ nghỉ (thấp đến cao)",
-    "Xếp hạng chỗ nghỉ và giá",
+    {
+      id: 0,
+      label: "Lựa chọn hàng đầu của chúng tôi",
+      sortBy: "",
+    },
+    {
+      id: 1,
+      label: "Giá (ưu tiên thấp nhất)",
+      sortBy: "total_price:asc",
+    },
+    {
+      id: 2,
+      label: "Giá (ưu tiên cao nhất)",
+      sortBy: "total_price:desc",
+    },
+    {
+      id: 3,
+      label: "Được đánh giá hàng đầu",
+      sortBy: "rating:desc",
+    },
+    {
+      id: 4,
+      label: "Khoảng cách từ trung tâm",
+      sortBy: "distance:asc",
+    },
+    {
+      id: 5,
+      label: "Được đánh giá tốt nhất và có giá thấp nhất",
+      sortBy: "rating:desc,total_price:asc",
+    },
   ];
 
   // Close dropdown when clicking outside
@@ -67,7 +102,7 @@ const PropertiesList = (props) => {
   }, []);
 
   const handleSortSelect = (option) => {
-    setSelectedSort(option);
+    setSelectedSort(option.id);
     setShowSortDropdown(false);
   };
 
@@ -75,13 +110,62 @@ const PropertiesList = (props) => {
     setIsHorizontal(horizontal);
   };
 
+  useEffect(() => {
+    if (destination && startDate && endDate) {
+      searchResults();
+    }
+  }, [
+    destination,
+    startDate,
+    endDate,
+    adults,
+    children,
+    rooms,
+    selectedSort,
+    filters,
+  ]);
+
+  const searchResults = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.get(`/properties/search`, {
+        params: {
+          location: destination,
+          start_date: startDate,
+          end_date: endDate,
+          adults,
+          children,
+          rooms,
+          filters,
+          sort: sortOptions[selectedSort].sortBy,
+        },
+      });
+      setProperties(response.data.data || { data: [], meta: { total: 0 } });
+    } catch (error) {
+      console.error("Lỗi khi tìm kiếm:", error);
+      setProperties({ data: [], meta: { total: 0 } });
+      // Handle error (e.g., show a notification)
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Extract city name safely
+  const cityName =
+    destination && typeof destination === "string"
+      ? destination.split(", ")[0]
+      : "Địa điểm";
+
+  // Get total properties count safely
+  const totalProperties = properties?.meta?.total || 0;
+
   return (
     <>
       {/* Right Column: Properties List */}
       <div className="w-full lg:flex-auto lg:shrink-1 lg:grow">
         <div className="flex items-center justify-between p-3">
           <h2 className="mb-3 text-2xl font-bold">
-            {`${props.destination.split(", ")[0]}: tìm thấy ${props.total ? props.total : 0} chỗ nghỉ`}
+            {`${cityName}: tìm thấy ${totalProperties} chỗ nghỉ`}
           </h2>
 
           {/* Improved toggle switch */}
@@ -127,7 +211,7 @@ const PropertiesList = (props) => {
             onClick={() => setShowSortDropdown(!showSortDropdown)}
           >
             <RiArrowUpDownFill className="text-gray-500" />
-            <span>Sắp xếp theo: {selectedSort}</span>
+            <span>Sắp xếp theo: {sortOptions[selectedSort].label}</span>
             <RiArrowDropDownLine
               className={`text-xl transition-transform ${showSortDropdown ? "rotate-180" : ""}`}
             />
@@ -139,54 +223,67 @@ const PropertiesList = (props) => {
               {sortOptions.map((option, index) => (
                 <div
                   key={index}
-                  className={`cursor-pointer px-4 py-3 text-sm hover:bg-blue-50 ${selectedSort === option ? "bg-blue-100" : ""}`}
+                  className={`cursor-pointer px-4 py-3 text-sm hover:bg-blue-50 ${selectedSort === option.id ? "bg-blue-100" : ""}`}
                   onClick={() => handleSortSelect(option)}
                 >
-                  {option}
+                  {option.label}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Properties List with proper className based on view mode */}
-        <div
-          className={
-            !isHorizontal
-              ? "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
-              : "space-y-4"
-          }
-        >
-          {props.propertiesList.map((property) =>
-            isHorizontal ? (
-              <PropertiesHorizontalItem
-                key={property.properties_id}
-                property={property}
-                getRatingText={getRatingText}
-                searchParams={props.searchParams}
-              />
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+          </div>
+        ) : (
+          /* Properties List with proper className based on view mode */
+          <div
+            className={
+              !isHorizontal
+                ? "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+                : "space-y-4"
+            }
+          >
+            {properties.data && properties.data.length > 0 ? (
+              properties.data.map((property) =>
+                isHorizontal ? (
+                  <PropertiesHorizontalItem
+                    key={property.id || property.properties_id}
+                    property={property}
+                    getRatingText={getRatingText}
+                    searchParams={location.search}
+                  />
+                ) : (
+                  <PropertiesVerticalItem
+                    key={property.id || property.properties_id}
+                    property={property}
+                    getRatingText={getRatingText}
+                    searchParams={location.search}
+                  />
+                ),
+              )
             ) : (
-              <PropertiesVerticalItem
-                key={property.id}
-                property={property}
-                getRatingText={getRatingText}
-                searchParams={props.searchParams}
-              />
-            ),
-          )}
-        </div>
+              <div className="col-span-full py-8 text-center text-gray-500">
+                Không tìm thấy kết quả phù hợp với yêu cầu của bạn
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
 };
+
+// Update PropTypes to match actual component usage
 PropertiesList.propTypes = {
-  propertiesList: PropTypes.array.isRequired,
-  destination: PropTypes.string.isRequired,
-  total: PropTypes.number, // Add validation for total
-  meta: PropTypes.shape({
-    total: PropTypes.number.isRequired,
-  }).isRequired,
-  searchParams: PropTypes.object, // Add validation for searchParams
+  // These props are not actually required as they're derived from state
+  // but we're keeping them for documentation purposes
+  propertiesList: PropTypes.array,
+  destination: PropTypes.string,
+  searchParams: PropTypes.object,
 };
 
 export default PropertiesList;
