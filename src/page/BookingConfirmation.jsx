@@ -2,22 +2,25 @@ import { useState, useEffect } from "react";
 import { setPageTitle } from "../utils/pageTitle";
 import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import { FaChevronRight, FaUser } from "react-icons/fa";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useStore } from "../utils/AuthProvider";
 import countries from "../utils/countries";
 import HeaderProgress from "../components/Booking/HeaderProgress";
 import LeftBooking from "../components/Booking/LeftBooking";
+import axios from "../utils/axiosCustomize";
 
 const BookingConfirmation = () => {
   const navigate = useNavigate();
   const { store } = useStore();
-
+  const location = useLocation();
+  const [bookingData, setBookingData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(null);
   // Initialize form with userProfile data if available
   const [formData, setFormData] = useState({
     firstName: store.userProfile?.first_name || "",
     lastName: store.userProfile?.last_name || "",
     email: store.userProfile?.email || "",
-    confirmEmail: store.userProfile?.email || "",
     phone: store.userProfile?.phone || "",
     country: store.userProfile?.nationality || "Việt Nam",
     specialRequests: "",
@@ -28,7 +31,6 @@ const BookingConfirmation = () => {
     firstName: false,
     lastName: false,
     email: false,
-    confirmEmail: false,
     phone: false,
     country: false,
   });
@@ -37,20 +39,81 @@ const BookingConfirmation = () => {
     firstName: "",
     lastName: "",
     email: "",
-    confirmEmail: "",
     phone: "",
   });
 
   // State to track textarea focus for animation
   const [textareaFocused, setTextareaFocused] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const location = useLocation();
-  const { hotelData, accommodations, totalPrice } = location.state;
+  const { id } = useParams();
   const params = new URLSearchParams(location.search);
   const adults = params.get("adults");
   const children = params.get("children");
   const checkIn = params.get("checkin");
   const checkOut = params.get("checkout");
+  const rooms = params.get("rooms");
+  const accommodations = params.get("accommodation_ids");
+
+  useEffect(() => {
+    callCheckedAvailableAccommodations();
+  }, [checkIn, checkOut, adults, children, rooms, accommodations]);
+
+  const callCheckedAvailableAccommodations = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
+      const response = await axios.get(
+        `/properties/${id}/accommodations/available`,
+        {
+          params: {
+            check_in: checkIn,
+            check_out: checkOut,
+            adults: adults,
+            children: children,
+            rooms: rooms,
+            accommodations: accommodations,
+          },
+        },
+      );
+
+      setBookingData(response.data.data);
+    } catch (error) {
+      console.error("Error fetching available accommodations:", error);
+
+      // Get error message from API response or use a default message
+      const errorMsg =
+        error.response?.data?.message ||
+        "Không thể tải thông tin phòng. Hệ thống sẽ đưa bạn về trang chọn phòng.";
+      setErrorMessage(errorMsg);
+
+      // Get property name from bookingData or use a default value
+      const propertyName = bookingData?.properties?.slug || "info";
+
+      // Set timeout to redirect after showing the error message
+      setTimeout(() => {
+        // Navigate back to the property page with search parameters
+        navigate(
+          `/properties/${id}/${propertyName}/info?${new URLSearchParams({
+            checkin: checkIn,
+            checkout: checkOut,
+            adults: adults,
+            children: children || 0,
+            rooms: rooms,
+          }).toString()}`,
+        );
+      }, 3000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to handle login click
+  const handleLoginClick = () => {
+    // Navigate to login page without passing booking data in state
+    navigate("/login", {
+      state: { from: location.pathname + location.search },
+    });
+  };
 
   useEffect(() => {
     setPageTitle("Xác nhận đặt phòng");
@@ -65,7 +128,6 @@ const BookingConfirmation = () => {
         firstName: store.userProfile.first_name || prev.firstName,
         lastName: store.userProfile.last_name || prev.lastName,
         email: store.userProfile.email || prev.email,
-        confirmEmail: store.userProfile.email || prev.confirmEmail,
         phone: store.userProfile.phone || prev.phone,
         country: store.userProfile.nationality || prev.country,
       }));
@@ -189,37 +251,17 @@ const BookingConfirmation = () => {
       return; // Prevent form submission if validation fails
     }
 
-    // Process form data if valid
-    console.log("Form submitted:", formData);
     setSubmitted(true);
 
     // Create a URLSearchParams string from the current params
     const searchParams = params.toString();
+    localStorage.setItem("bookingFormData", JSON.stringify(formData));
 
     // Navigate to the FinishedBooking page with all required data
-    navigate(
-      {
-        pathname: `/booking/${hotelData.id}`,
-        search: searchParams,
-      },
-      {
-        state: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          specialRequests: formData.specialRequests,
-          country: formData.country,
-          hotelData,
-          accommodations,
-          adults,
-          children,
-          checkIn,
-          checkOut,
-          totalPrice,
-        },
-      },
-    );
+    navigate({
+      pathname: `/booking/${id}`,
+      search: searchParams,
+    });
   };
 
   // Add handlers for textarea focus and blur
@@ -236,6 +278,47 @@ const BookingConfirmation = () => {
     return formData[field];
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <svg
+          className="h-12 w-12 animate-spin text-gray-200"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4zm16 0a8 8 0 01-8 8v-4a4 4 0 004-4h4z"
+          ></path>
+        </svg>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="rounded-lg bg-red-50 p-4 text-center">
+          <p className="text-sm text-red-500">{errorMessage}</p>
+          <p className="mt-2 text-xs text-gray-500">
+            Bạn sẽ được chuyển hướng về trang chi tiết chỗ nghỉ trong giây
+            lát...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white pb-8">
       <HeaderProgress step={2} />
@@ -243,23 +326,22 @@ const BookingConfirmation = () => {
         {/* Main content */}
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Left column - Property details */}
-          <LeftBooking
-            hotelData={hotelData}
-            accommodations={accommodations}
-            adults={adults}
-            childs={children}
-            checkIn={checkIn}
-            checkOut={checkOut}
-            totalPrice={totalPrice}
-            params={params}
-          ></LeftBooking>
+          {bookingData && (
+            <LeftBooking bookingData={bookingData} params={params.toString()} />
+          )}
 
           {/* Right column - User details form */}
           <div className="w-full lg:w-2/3">
             <div className="mb-4 flex items-center gap-3 rounded-lg bg-white p-4 shadow">
               <div>
                 {store.userProfile ? (
-                  <div></div>
+                  <div className="rounded-full border-2 border-amber-500">
+                    <img
+                      src={store.userProfile.avatar}
+                      alt="User Avatar"
+                      className="h-12 w-12 rounded-full object-cover"
+                    />
+                  </div>
                 ) : (
                   <span>
                     <FaUser className="text-3xl text-third" />
@@ -270,16 +352,28 @@ const BookingConfirmation = () => {
                 {store.userProfile ? (
                   <div>
                     <span>Bạn đã được đăng nhập</span>
-                    <p>{store.userProfile.avatar}</p>
+                    <p>{store.userProfile.email}</p>
                   </div>
                 ) : (
                   <>
                     <p className="text-sm">
-                      <span className="cursor-pointer text-third hover:underline">
+                      <span
+                        onClick={handleLoginClick}
+                        className="cursor-pointer text-third hover:underline"
+                      >
                         Đăng nhập
                       </span>{" "}
                       để đặt phòng với thông tin đã lưu của bạn hoặc{" "}
-                      <span className="cursor-pointer text-third hover:underline">
+                      <span
+                        onClick={() => {
+                          navigate("/register", {
+                            state: {
+                              from: location.pathname + location.search,
+                            },
+                          });
+                        }}
+                        className="cursor-pointer text-third hover:underline"
+                      >
                         đăng ký
                       </span>{" "}
                       để quản lý các đặt phòng của bạn mọi lúc mọi nơi!
@@ -288,6 +382,7 @@ const BookingConfirmation = () => {
                 )}
               </div>
             </div>
+
             <div className="rounded-lg bg-white p-6 shadow">
               <div className="mb-4 flex items-center">
                 <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#006ce4] text-white">

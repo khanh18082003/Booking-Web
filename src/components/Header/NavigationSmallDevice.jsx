@@ -1,6 +1,6 @@
 import { VscAccount } from "react-icons/vsc";
 import { FaBars } from "react-icons/fa";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import PropTypes from "prop-types";
 
 const NavigationSmallDevice = ({
@@ -9,6 +9,15 @@ const NavigationSmallDevice = ({
   avatar,
   name,
 }) => {
+  const location = useLocation();
+  const currentPath = location.pathname + location.search;
+
+  const handleLoginClick = () => {
+    // Save the current path to localStorage as a fallback
+    localStorage.setItem("returnToPath", currentPath);
+    console.log("Saved return path in mobile:", currentPath);
+  };
+
   return (
     <div className="flex items-center gap-2 text-white lg:hidden">
       {/* navigate login section */}
@@ -35,7 +44,9 @@ const NavigationSmallDevice = ({
           <>
             <Link
               to="/login"
+              state={{ from: currentPath }}
               className="relative flex h-full w-full items-center justify-center px-3 py-2"
+              onClick={handleLoginClick}
             >
               <span className="min-h-[24px] min-w-[24px]">
                 <VscAccount className="h-full w-full font-medium" />

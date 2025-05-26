@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useState, useEffect } from "react";
 import axios from "../utils/axiosCustomize"; // Import axios
 import { FcGoogle } from "react-icons/fc";
@@ -7,6 +7,7 @@ import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     setPageTitle(PAGE_TITLES.REGISTER);
@@ -50,6 +51,7 @@ const Register = () => {
         state: {
           email: responseBody.data.email,
           password: formData.password,
+          from: location.state?.from, // Preserve the redirect URL if it exists
         },
       });
     } catch (error) {

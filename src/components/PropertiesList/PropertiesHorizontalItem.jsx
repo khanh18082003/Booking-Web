@@ -151,11 +151,13 @@ const PropertiesHorizontalItem = ({
                 {property.accommodations.map((accommodation) => (
                   <div key={accommodation.accommodation_id}>
                     <h4>
-                      {property.accommodations.length > 1 ? (
+                      {property.accommodations.length >= 1 &&
+                      accommodation.suggested_quantity > 1 ? (
                         <>
                           <span className="text-[14px]">
-                            {accommodation.suggested_quantity}×
+                            {accommodation.suggested_quantity}
                           </span>
+                          <span className="mx-1">×</span>
                           <span className="text-[14px] font-semibold">
                             {accommodation.accommodation_name}
                           </span>
@@ -171,7 +173,8 @@ const PropertiesHorizontalItem = ({
                           {accommodation.total_beds} giường (
                           {accommodation.bed_names.map((bed, index) => (
                             <span key={index}>
-                              {bed.quantity} {bed.bed_type_name}
+                              {bed.quantity * accommodation.suggested_quantity}{" "}
+                              {bed.bed_type_name}
                               {index < accommodation.bed_names.length - 1
                                 ? ", "
                                 : ""}

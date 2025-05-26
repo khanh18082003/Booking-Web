@@ -294,82 +294,11 @@ const FormSearchBox = ({ showTitle }) => {
       rooms,
     });
 
-    try {
-      const response = await axiosInstance.get(`/properties/search`, {
-        params: {
-          location: destination,
-          start_date: startDate,
-          end_date: endDate,
-          adults,
-          children,
-          rooms,
-        },
-      });
-
-      navigate(
-        `/searchresults?destination=${encodeURIComponent(
-          destination,
-        )}&checkin=${startDate}&checkout=${endDate}&adults=${adults}&children=${children}&rooms=${rooms}`,
-        {
-          state: {
-            propertiesList: response.data.data.data,
-            total: response.data.data.meta.total,
-          },
-        },
-      );
-    } catch (error) {
-      console.error("Lỗi khi tìm kiếm:", error);
-
-      // Check if we have valid locations to retry with
-      if (locations && locations.length > 0) {
-        console.log("Retrying with location:", locations[0].destination);
-
-        // Update input field with first location
-        const newDestination = locations[0].destination;
-        setInputChange(newDestination);
-
-        // Retry the search with the new destination
-        try {
-          const startDate = format(date.startDate, "yyyy-MM-dd");
-          const endDate = format(date.endDate, "yyyy-MM-dd");
-          const adults = numbers.adults.valueNow;
-          const children = numbers.children.valueNow;
-          const rooms = numbers.rooms.valueNow;
-
-          const response = await axiosInstance.get(`/properties/search`, {
-            params: {
-              location: newDestination,
-              start_date: startDate,
-              end_date: endDate,
-              adults,
-              children,
-              rooms,
-            },
-          });
-
-          navigate(
-            `/searchresults?destination=${encodeURIComponent(
-              newDestination,
-            )}&checkin=${startDate}&checkout=${endDate}&adults=${adults}&children=${children}&rooms=${rooms}`,
-            {
-              state: {
-                propertiesList: response.data.data.data,
-                total: response.data.data.meta.total,
-                destination: newDestination,
-              },
-            },
-          );
-        } catch (retryError) {
-          console.error("Retry search also failed:", retryError);
-          // Show appropriate error message to user
-          alert(
-            "Không thể tìm kiếm địa điểm. Vui lòng thử lại với địa điểm khác.",
-          );
-        }
-      } else {
-        alert("Không thể tìm kiếm địa điểm. Vui lòng thử lại sau.");
-      }
-    }
+    navigate(
+      `/searchresults?destination=${encodeURIComponent(
+        destination,
+      )}&checkin=${startDate}&checkout=${endDate}&adults=${adults}&children=${children}&rooms=${rooms}`,
+    );
   };
 
   const handleChooseItemBox = (e) => {

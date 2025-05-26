@@ -25,7 +25,7 @@ const BookingSuccess = () => {
   const location = useLocation();
 
   // Get booking data directly from location state (passed from FinishedBooking)
-  const { bookingData, paymentMethod, hotelData } = location.state || {};
+  const { bookingData, paymentMethod } = location.state || {};
 
   useEffect(() => {
     setPageTitle("Đặt phòng thành công");
@@ -62,13 +62,11 @@ const BookingSuccess = () => {
   }
 
   // Determine whether payment is online based on payment method
-  const isOnlinePayment = paymentMethod === "online";
+  const isOnlinePayment = paymentMethod === "ONLINE";
 
   // QR code for online payments
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-    `Booking.com Payment: VND ${bookingData.total_price} - Booking ID: ${bookingData.booking_id}`,
-  )}`;
-
+  const qrCodeUrl = bookingData.payment.url_image;
+  console.log("QR Code URL:", qrCodeUrl);
   return (
     <div className="min-h-screen bg-gray-100 py-12">
       <div className="mx-auto max-w-4xl">
@@ -83,14 +81,14 @@ const BookingSuccess = () => {
           <p className="mb-4 text-lg text-gray-600">
             Cảm ơn bạn đã đặt phòng tại{" "}
             <span className="font-semibold text-blue-600">
-              {hotelData?.name}
+              {bookingData.properties.name}
             </span>
             . Đơn đặt phòng đang được duyệt và sẽ gửi đến email của bạn khi
             duyệt xong.
           </p>
           <div className="mb-2 text-lg font-medium">
             <span className="text-blue-600">
-              {bookingData.user_booking?.email}
+              {bookingData.user_booking.email}
             </span>
           </div>
 
@@ -139,12 +137,12 @@ const BookingSuccess = () => {
             <div className="mb-5 flex flex-col rounded-lg border border-gray-200 bg-gray-50 p-4">
               <div className="mb-3 flex items-center gap-2">
                 <div className="text-xl font-semibold text-gray-800">
-                  {hotelData?.name}
+                  {bookingData.properties.name}
                 </div>
               </div>
               <div className="mb-4 flex items-center gap-1 text-sm text-gray-600">
                 <MdLocationOn />
-                <span>{hotelData?.address}</span>
+                <span>{bookingData.properties.address}</span>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
@@ -157,7 +155,7 @@ const BookingSuccess = () => {
                     {formatDate(bookingData.check_in)}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Từ {hotelData?.check_in_time}
+                    Từ {bookingData.properties.check_in_time}
                   </p>
                 </div>
 
@@ -170,7 +168,7 @@ const BookingSuccess = () => {
                     {formatDate(bookingData.check_out)}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Trước {hotelData?.check_out_time}
+                    Trước {bookingData.properties.check_out_time}
                   </p>
                 </div>
               </div>

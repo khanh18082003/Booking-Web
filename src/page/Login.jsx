@@ -1,6 +1,6 @@
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import axios from "../utils/axiosCustomize";
 import { useState, useEffect } from "react";
 import { BsEyeSlashFill } from "react-icons/bs";
@@ -10,6 +10,7 @@ import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { store, startApiCall, finishApiCall } = useStore();
   const [formData, setFormData] = useState({
     email: "",
@@ -18,6 +19,15 @@ const Login = () => {
   const [error, setError] = useState(""); // State to track error message
   const [hasError, setHasError] = useState(false); // State to track input error styling
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  // Debug: log location state
+  useEffect(() => {
+    console.log("Login page received location state:", location.state);
+    console.log(
+      "Local storage returnToPath:",
+      localStorage.getItem("returnToPath"),
+    );
+  }, [location]);
 
   useEffect(() => {
     setPageTitle(PAGE_TITLES.LOGIN);
@@ -34,12 +44,10 @@ const Login = () => {
     setHasError(false); // Reset input styling
   };
 
-  // Modified handleSubmit with a 10-second delay and explicit loading state management
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Then make the actual API call
       startApiCall(); // Start loading state
 
       const response = await axios.post("/auth/login", {
@@ -58,16 +66,29 @@ const Login = () => {
       const accessToken = responseBody.data.access_token;
       localStorage.setItem("accessToken", accessToken);
 
-      navigate("/");
+      // Determine where to navigate after successful login
+      // First try to get from location.state, then from localStorage as fallback
+      const returnPath =
+        location.state?.from || localStorage.getItem("returnToPath") || "/";
+
+      // Clear the localStorage returnToPath since we're using it now
+      localStorage.removeItem("returnToPath");
+
+      // Navigate to the return path
+      navigate(returnPath, { replace: true });
     } catch (error) {
       if (
-        error.response.status === 401 &&
+        error.response?.status === 401 &&
         error.response?.data.code === "M0404"
       ) {
+        // For email verification, pass along the return path
+        const returnPath =
+          location.state?.from || localStorage.getItem("returnToPath");
         navigate("/verify-email", {
           state: {
             email: formData.email,
             password: formData.password,
+            from: returnPath,
           },
         });
         return;
@@ -82,9 +103,7 @@ const Login = () => {
         setError("An error occurred. Please try again later.");
       }
     } finally {
-      // Explicitly finish the loading state if it hasn't been finished by the axios interceptors
       finishApiCall();
-      console.log("Loading finished.");
     }
   };
 
