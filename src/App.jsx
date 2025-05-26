@@ -18,6 +18,10 @@ import ResetPassword from "./page/ResetPassword";
 import BookingConfirmation from "./page/BookingConfirmation";
 import FinishedBooking from "./page/FinishedBooking";
 import BookingSuccess from "./page/BookingSuccess";
+import HostLogin from "./host/page/HostLogin";
+import HostRegister from "./host/page/HostRegister";
+import PropertiesType from "./host/page/PropertiesType";
+import AddProperty from "./host/page/AddProperty";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -73,6 +77,10 @@ function App() {
           <Route path="verify-email" element={<VerifyEmail />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
           <Route path="reset-password" element={<ResetPassword />} />
+          <Route path="/host/login" element={<HostLogin />} />
+          <Route path="/host/register" element={<HostRegister />} />
+          <Route path="/host/propertiestype" element={<PropertiesType />} />
+          <Route path="/host/add-property" element={<AddProperty />} />
         </Route>
       </Routes>
     </BrowserRouter>

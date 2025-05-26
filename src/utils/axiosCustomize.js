@@ -63,6 +63,7 @@ instance.interceptors.request.use(
       "/locations",
       "/payments/check-payment-status",
       "/bookings",
+      "/users/host/check-email",
     ];
 
     const isNoAuthEndpoint = noAuthEndpoints.some((endpoint) =>
