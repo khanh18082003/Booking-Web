@@ -10,7 +10,6 @@ import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { store, startApiCall, finishApiCall } = useStore();
   const [formData, setFormData] = useState({
     email: "",

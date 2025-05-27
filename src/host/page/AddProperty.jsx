@@ -1,16 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-
-// Dữ liệu amenities giả để test
-const FAKE_AMENITIES = [
-  { id: "ac1db001-96c3-1823-8196-c3b8f15e0006", name: "Wifi miễn phí" },
-  { id: "ac1db001-96c3-1823-8196-c3bb66a50008", name: "Hồ bơi" },
-  { id: "ac1db001-96c3-1823-8196-c3b9ad3d0007", name: "Bãi đỗ xe" },
-  { id: "ac1db001-96c3-1823-8196-c3b8f15e0008", name: "Lễ tân 24/7" },
-  { id: "ac1db001-96c3-1823-8196-c3b8f15e0009", name: "Phòng gym" },
-  { id: "ac1db001-96c3-1823-8196-c3b8f15e0010", name: "Nhà hàng" },
-];
-
+import axios from "../../utils/axiosCustomize";
 const PROPERTY_TYPE_MAP = {
   villa: {
     type_id: 1,
@@ -88,9 +78,21 @@ const AddProperty = () => {
   // State amenities
   const [amenities, setAmenities] = useState([]);
 
+  // ...existing code...
+
   useEffect(() => {
-    // Giả lập fetch amenities
-    setAmenities(FAKE_AMENITIES);
+    // Fetch amenities từ API thật
+    const fetchAmenities = async () => {
+      try {
+        const res = await axios.get("/amenities");
+        if (res.data.code === "M000") {
+          setAmenities(res.data.data.data); // data.data là mảng amenities
+        }
+      } catch (err) {
+        setAmenities([]);
+      }
+    };
+    fetchAmenities();
   }, []);
 
   // Khi đổi loại property
@@ -119,11 +121,80 @@ const AddProperty = () => {
   };
 
   // Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Gửi property lên server ở đây
-    alert("Dữ liệu gửi lên:\n" + JSON.stringify(property, null, 2));
-    // navigate("/host/properties"); // hoặc chuyển hướng sau khi thêm thành công
+    const formData = new FormData();
+
+    // Tạo object request với amenities_id là mảng id
+    const requestObj = {
+      name: property.name,
+      description: property.description,
+      address: property.address,
+      ward: property.ward,
+      district: property.district,
+      city: property.city,
+      province: property.province,
+      country: property.country,
+      status: property.status,
+      check_in_time: property.check_in_time,
+      check_out_time: property.check_out_time,
+      type_id: property.type_id,
+      amenities_id: property.amenities_id, // là mảng id
+    };
+    formData.append("request", JSON.stringify(requestObj));
+
+    // Thêm file ảnh đại diện
+    if (property.imageFile) {
+      formData.append("image", property.imageFile);
+    }
+
+    // Thêm các file ảnh bổ sung
+    if (property.extraImageFiles && property.extraImageFiles.length > 0) {
+      for (let file of property.extraImageFiles) {
+        formData.append("extra_image", file);
+      }
+    }
+
+    try {
+      console.log("Submitting property:", formData);
+      console.log("Request object:", requestObj);
+      console.log("Extra images:", property.extraImageFiles);
+      console.log("image file:", property.imageFile);
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+      const token = localStorage.getItem("accessToken");
+      console.log("Token:", token);
+      const response = await fetch(
+        "http://localhost:8081/booking-api/v1/properties",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // KHÔNG set Content-Type
+          },
+          body: formData,
+        },
+      );
+
+      // Xử lý response
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Success:", result);
+        alert("Tạo chỗ nghỉ thành công!");
+
+        // Reset form hoặc chuyển trang
+        navigate("/host/properties"); // Chuyển về danh sách properties
+      } else {
+        const error = await response.json();
+        console.error("Error:", error);
+        alert(
+          `Tạo chỗ nghỉ thất bại: ${error.message || "Lỗi không xác định"}`,
+        );
+      }
+    } catch (err) {
+      alert("Tạo chỗ nghỉ thất bại!");
+    }
   };
 
   return (
@@ -178,45 +249,46 @@ const AddProperty = () => {
           <label className="mb-2 block font-medium text-gray-700">
             Ảnh đại diện
           </label>
-          <div className="flex items-center gap-4">
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 px-6 py-4 transition hover:bg-blue-100">
-              <svg
-                className="mb-2 h-8 w-8 text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              <span className="text-sm text-blue-700">Chọn ảnh đại diện</span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    const base64 = await getBase64(file);
-                    setProperty((p) => ({ ...p, image: base64 }));
-                  }
-                }}
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 px-6 py-4 transition hover:bg-blue-100">
+            <svg
+              className="mb-2 h-8 w-8 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4v16m8-8H4"
               />
-            </label>
-            {property.image && (
-              <img
-                src={property.image}
-                alt="Preview"
-                className="h-24 w-24 rounded-lg object-cover shadow"
-              />
-            )}
-          </div>
+            </svg>
+            <span className="text-sm text-blue-700">Chọn ảnh đại diện</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const base64 = await getBase64(file);
+                  setProperty((p) => ({
+                    ...p,
+                    image: base64,
+                    imageFile: file,
+                  }));
+                }
+              }}
+            />
+          </label>
+          {property.image && (
+            <img
+              src={property.image}
+              alt="Preview"
+              className="mt-2 h-24 w-24 rounded-lg object-cover shadow"
+            />
+          )}
         </div>
-
         {/* Ảnh bổ sung */}
         <div>
           <label className="mb-2 block font-medium text-gray-700">
@@ -248,6 +320,7 @@ const AddProperty = () => {
                 setProperty((p) => ({
                   ...p,
                   extra_images: base64Arr,
+                  extraImageFiles: files, // Lưu file gốc để gửi lên server
                 }));
               }}
             />
@@ -389,6 +462,7 @@ const AddProperty = () => {
                   checked={property.amenities_id.includes(a.id)}
                   onChange={() => handleAmenityChange(a.id)}
                 />
+                <span dangerouslySetInnerHTML={{ __html: a.icon }} />
                 {a.name}
               </label>
             ))}
