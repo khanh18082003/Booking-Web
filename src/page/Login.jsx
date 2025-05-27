@@ -7,11 +7,9 @@ import { BsEyeSlashFill } from "react-icons/bs";
 import { IoEyeSharp } from "react-icons/io5";
 import { useStore } from "../utils/AuthProvider";
 import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
-import { useLocation } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { store, startApiCall, finishApiCall } = useStore();
   const [formData, setFormData] = useState({
     email: "",
