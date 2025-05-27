@@ -1,7 +1,7 @@
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "../../utils/axiosCustomize";
+import hostAxios from "../../utils/hostAxiosCustomize";
 import { useState, useEffect } from "react";
 import { BsEyeSlashFill } from "react-icons/bs";
 import { IoEyeSharp } from "react-icons/io5";
@@ -42,14 +42,13 @@ const HostLogin = () => {
     try {
       startApiCall();
 
-      // Đổi endpoint nếu host login khác user login
-      const response = await axios.post("/host/auth/login", {
+      const response = await hostAxios.post("/auth/host/login", {
         email: formData.email,
         password: formData.password,
       });
 
       const responseBody = response.data;
-
+      console.log("Login response:", responseBody);
       if (responseBody.code !== "M000") {
         setError(responseBody.message);
         setHasError(true);
@@ -59,14 +58,14 @@ const HostLogin = () => {
       const accessToken = responseBody.data.access_token;
       localStorage.setItem("hostAccessToken", accessToken);
 
-      const redirectTo = location.state?.from || "/host";
+      const redirectTo = location.state?.from || "/host/propertiestype";
       navigate(redirectTo, { replace: true });
     } catch (error) {
       if (
         error.response?.status === 401 &&
         error.response?.data?.code === "M0404"
       ) {
-        navigate("/host/verify-email", {
+        navigate("/verify-email", {
           state: {
             email: formData.email,
             password: formData.password,

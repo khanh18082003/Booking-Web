@@ -7,7 +7,6 @@ import { BsEyeSlashFill } from "react-icons/bs";
 import { IoEyeSharp } from "react-icons/io5";
 import { useStore } from "../utils/AuthProvider";
 import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
-import { useLocation } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,7 +19,6 @@ const Login = () => {
   const [error, setError] = useState(""); // State to track error message
   const [hasError, setHasError] = useState(false); // State to track input error styling
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const location = useLocation();
 
   // Debug: log location state
   useEffect(() => {

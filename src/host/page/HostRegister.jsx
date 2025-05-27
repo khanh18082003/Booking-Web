@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import axios from "../../utils/axiosCustomize";
+import hostAxios from "../../utils/hostAxiosCustomize";
 
 const HostRegister = () => {
   const navigate = useNavigate();
@@ -25,10 +25,10 @@ const HostRegister = () => {
     if (!formData.email) return;
     setChecking(true);
     try {
-      const res = await axios.post("/users/host/check-email", {
+      const res = await hostAxios.post("/users/host/check-email", {
         email: formData.email,
       });
-      console.log(res.data);
+
       // Nếu code 501: đã có tài khoản host, chuyển về login host
       if (res.data.code === "M0501") {
         alert("Tài khoản này đã là Host. Vui lòng đăng nhập!");
@@ -43,10 +43,6 @@ const HostRegister = () => {
         navigate("/host/login");
         return;
       }
-      // Nếu code 404: chưa có tài khoản, cho phép đăng ký mới
-      if (res.data.code === "M0011") {
-        setStep(2);
-      }
     } catch (err) {
       setStep(2);
     } finally {
@@ -57,49 +53,30 @@ const HostRegister = () => {
   // Bước 2: Xác thực hoặc đăng ký mới
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isExistingUser) {
-      if (!formData.existingPassword) {
-        alert("Vui lòng nhập mật khẩu tài khoản User để xác thực!");
-        return;
-      }
-      try {
-        const res = await axios.post("/host/upgrade-role", {
-          email: formData.email,
-          password: formData.existingPassword,
+
+    if (formData.password !== formData.confirmPassword) {
+      alert("Mật khẩu không khớp!");
+      return;
+    }
+    try {
+      const res = await hostAxios.post("/users/register", {
+        email: formData.email,
+        password: formData.password,
+        confirm_password: formData.confirmPassword,
+        roles: ["HOST"],
+      });
+      if (res.data.code === "M000") {
+        navigate("/verify-email", {
+          state: {
+            email: formData.email,
+            password: formData.password,
+          },
         });
-        if (res.data.code === "M000") {
-          alert("Cập nhật role Host thành công!");
-          navigate("/host/login");
-        } else {
-          alert(res.data.message || "Cập nhật thất bại!");
-        }
-      } catch (err) {
-        alert("Cập nhật thất bại!");
+      } else {
+        alert(res.data.message || "Đăng ký thất bại!");
       }
-    } else {
-      if (formData.password !== formData.confirmPassword) {
-        alert("Mật khẩu không khớp!");
-        return;
-      }
-      try {
-        const res = await axios.post("/host/register", {
-          email: formData.email,
-          password: formData.password,
-          confirm_password: formData.confirmPassword,
-        });
-        if (res.data.code === "M000") {
-          navigate("/host/verify-email", {
-            state: {
-              email: formData.email,
-              password: formData.password,
-            },
-          });
-        } else {
-          alert(res.data.message || "Đăng ký thất bại!");
-        }
-      } catch (err) {
-        alert("Đăng ký thất bại!");
-      }
+    } catch (err) {
+      alert("Đăng ký thất bại!");
     }
   };
 
