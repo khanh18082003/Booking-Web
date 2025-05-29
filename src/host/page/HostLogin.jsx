@@ -58,7 +58,7 @@ const HostLogin = () => {
       const accessToken = responseBody.data.access_token;
       localStorage.setItem("hostAccessToken", accessToken);
 
-      const redirectTo = location.state?.from || "/host/propertiestype";
+      const redirectTo = location.state?.from || "/dashboard";
       navigate(redirectTo, { replace: true });
     } catch (error) {
       if (

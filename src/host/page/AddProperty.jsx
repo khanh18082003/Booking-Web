@@ -141,7 +141,10 @@ const AddProperty = () => {
       type_id: property.type_id,
       amenities_id: property.amenities_id, // là mảng id
     };
-    formData.append("request", JSON.stringify(requestObj));
+    formData.append(
+      "request",
+      new Blob([JSON.stringify(requestObj)], { type: "application/json" }),
+    );
 
     // Thêm file ảnh đại diện
     if (property.imageFile) {
@@ -163,35 +166,9 @@ const AddProperty = () => {
       for (let pair of formData.entries()) {
         console.log(pair[0], pair[1]);
       }
-      const token = localStorage.getItem("accessToken");
-      console.log("Token:", token);
-      const response = await fetch(
-        "http://localhost:8081/booking-api/v1/properties",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            // KHÔNG set Content-Type
-          },
-          body: formData,
-        },
-      );
-
-      // Xử lý response
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Success:", result);
-        alert("Tạo chỗ nghỉ thành công!");
-
-        // Reset form hoặc chuyển trang
-        navigate("/host/properties"); // Chuyển về danh sách properties
-      } else {
-        const error = await response.json();
-        console.error("Error:", error);
-        alert(
-          `Tạo chỗ nghỉ thất bại: ${error.message || "Lỗi không xác định"}`,
-        );
-      }
+      await axios.post("/properties", formData);
+      alert("Tạo chỗ nghỉ thành công!");
+      navigate("/host/properties");
     } catch (err) {
       alert("Tạo chỗ nghỉ thất bại!");
     }

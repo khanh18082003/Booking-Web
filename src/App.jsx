@@ -22,6 +22,7 @@ import HostLogin from "./host/page/HostLogin";
 import HostRegister from "./host/page/HostRegister";
 import PropertiesType from "./host/page/PropertiesType";
 import AddProperty from "./host/page/AddProperty";
+import HostDashboard from "./host/page/HostDashboard";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -77,9 +78,10 @@ function App() {
           <Route path="verify-email" element={<VerifyEmail />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
           <Route path="reset-password" element={<ResetPassword />} />
+          <Route path="/dashboard" element={<HostDashboard />} />
           <Route path="/host/login" element={<HostLogin />} />
           <Route path="/host/register" element={<HostRegister />} />
-          <Route path="/host/propertiestype" element={<PropertiesType />} />
+          <Route path="/host/properties-type" element={<PropertiesType />} />
           <Route path="/host/add-property" element={<AddProperty />} />
         </Route>
       </Routes>
