@@ -14,7 +14,7 @@ import { useStore } from "../../utils/AuthProvider";
 import axios, { registerLoadingHandlers } from "../../utils/axiosCustomize";
 import ApiLoading from "../common/ApiLoading";
 
-const AppLayout = () => {
+const UserLayout = () => {
   const { store, setStore, startApiCall, finishApiCall } = useStore();
   const [isAccountOptionalVisible, setAccountOptionalVisible] = useState(false);
   const isAuthenticated = localStorage.getItem("accessToken") !== null;
@@ -119,4 +119,4 @@ const AppLayout = () => {
   );
 };
 
-export default AppLayout;
+export default UserLayout;

@@ -6,9 +6,11 @@ let finishApiCall = () => {};
 // Endpoints that shouldn't trigger loading indicators
 const noLoadingEndpoints = [
   "/users/my-profile", // Background profile fetch
+  "/payments/check-payment-status", // Payment status check
   "/analytics", // Analytics endpoints
   "/health-check", // Health check endpoints
   "/locations", // Location search suggestions
+  "/payment/get-payment",
 ];
 
 const noRefreshTokenEndpoints = [
@@ -67,8 +69,8 @@ instance.interceptors.request.use(
       "/users/host/check-email",
     ];
 
-    const isNoAuthEndpoint = noAuthEndpoints.some((endpoint) =>
-      config.url.includes(endpoint),
+    const isNoAuthEndpoint = noAuthEndpoints.some(
+      (endpoint) => config.url === endpoint,
     );
     const token = localStorage.getItem("accessToken");
 
@@ -104,8 +106,8 @@ instance.interceptors.response.use(
   async function (error) {
     // Don't finish loading yet if we're going to retry the request
     const originalRequest = error.config;
-    const isNoAuthEndpoint = noRefreshTokenEndpoints.some((endpoint) =>
-      originalRequest.url.includes(endpoint),
+    const isNoAuthEndpoint = noRefreshTokenEndpoints.some(
+      (endpoint) => originalRequest.url === endpoint,
     );
     // Check if the error is 401 and the request is not already retried
     if (error.response?.status === 401 && !originalRequest._retry) {

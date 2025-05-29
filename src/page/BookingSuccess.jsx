@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import {
@@ -9,34 +9,91 @@ import {
   FaMapMarkerAlt,
   FaRegCalendarAlt,
   FaBed,
-  FaLock,
 } from "react-icons/fa";
-import {
-  MdEmail,
-  MdLocationOn,
-  MdPayment,
-  MdPrint,
-  MdContentCopy,
-} from "react-icons/md";
+import { MdEmail, MdLocationOn, MdPayment, MdPrint } from "react-icons/md";
 import { setPageTitle } from "../utils/pageTitle";
 import { formatDate, getNights } from "../utils/utility";
+import axios from "../utils/axiosCustomize";
 
 const BookingSuccess = () => {
   const location = useLocation();
 
   // Get booking data directly from location state (passed from FinishedBooking)
   const { bookingData, paymentMethod } = location.state || {};
-
+  // Determine whether payment is online based on payment method
+  const isOnlinePayment = paymentMethod === "ONLINE";
+  const [payment, setPayment] = useState(bookingData?.payment || {});
   useEffect(() => {
     setPageTitle("Đặt phòng thành công");
+    hanldeCallGetPayment();
     window.scrollTo(0, 0);
   }, []);
 
-  // Copy booking ID to clipboard
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert("Đã sao chép mã đặt phòng vào clipboard!");
+  const hanldeCallGetPayment = async () => {
+    try {
+      const response = await axios.get("payments/get-payment", {
+        params: {
+          id: bookingData.payment.id,
+        },
+      });
+      if (response.data.status === 200 && response.data.code === "M000") {
+        setPayment(response.data.data);
+      } else {
+        console.error("Failed to fetch payment data:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching payment data:", error);
+      alert(
+        "Đã xảy ra lỗi khi lấy thông tin thanh toán. Vui lòng thử lại sau.",
+      );
+    }
   };
+
+  const handleCallHistoricalTransaction = async () => {
+    try {
+      const response = await axios.get("payments/check-payment-status", {
+        params: {
+          id: bookingData.payment.id,
+          expectedAmount: bookingData.total_price,
+          expectedTransactionId: bookingData.payment.transaction_id,
+        },
+      });
+      if (
+        response.data.status === 200 &&
+        response.data.code === "M000" &&
+        response.data.data
+      ) {
+        setPayment((prevPayment) => ({
+          ...prevPayment,
+          status: true,
+        }));
+      }
+    } catch (error) {
+      console.error("Error checking payment status:", error);
+      alert(
+        "Đã xảy ra lỗi khi kiểm tra trạng thái thanh toán. Vui lòng thử lại sau.",
+      );
+    }
+  };
+
+  useEffect(() => {
+    let intervalId;
+    // Only poll payment status if online payment and not yet paid
+    if (isOnlinePayment && payment.status !== true) {
+      intervalId = setInterval(async () => {
+        await handleCallHistoricalTransaction();
+        // If status is updated to paid, stop polling
+        if (payment.status === true) {
+          window.scrollTo(0, 0);
+          clearInterval(intervalId);
+        }
+      }, 2000);
+    }
+    // Cleanup interval on unmount
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isOnlinePayment]);
 
   // Check if we have booking data
   if (!bookingData) {
@@ -61,12 +118,11 @@ const BookingSuccess = () => {
     );
   }
 
-  // Determine whether payment is online based on payment method
-  const isOnlinePayment = paymentMethod === "ONLINE";
+  if (isOnlinePayment) {
+    // QR code for online payments
+    var qrCodeUrl = bookingData.payment?.url_image;
+  }
 
-  // QR code for online payments
-  const qrCodeUrl = bookingData.payment.url_image;
-  console.log("QR Code URL:", qrCodeUrl);
   return (
     <div className="min-h-screen bg-gray-100 py-12">
       <div className="mx-auto max-w-4xl">
@@ -83,38 +139,13 @@ const BookingSuccess = () => {
             <span className="font-semibold text-blue-600">
               {bookingData.properties.name}
             </span>
-            . Đơn đặt phòng đang được duyệt và sẽ gửi đến email của bạn khi
-            duyệt xong.
+            . Booking.com đã gửi thông tin đặt phòng đến email của bạn.
           </p>
           <div className="mb-2 text-lg font-medium">
             <span className="text-blue-600">
               {bookingData.user_booking.email}
             </span>
           </div>
-
-          {/* Booking ID Card */}
-          {bookingData.booking_id && (
-            <div className="mt-4 w-full max-w-md rounded-lg border border-gray-200 bg-blue-50 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FaLock className="text-blue-600" />
-                  <span className="font-medium">Mã đặt phòng:</span>
-                </div>
-                <button
-                  onClick={() => copyToClipboard(bookingData.booking_id)}
-                  className="rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
-                  title="Nhấn để sao chép"
-                >
-                  <MdContentCopy />
-                </button>
-              </div>
-              <div className="mt-1 text-center">
-                <span className="text-xl font-bold text-blue-600">
-                  {bookingData.booking_id}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Booking Details Card */}
@@ -250,10 +281,10 @@ const BookingSuccess = () => {
                 <p className="font-medium text-gray-600">Trạng thái:</p>
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-bold text-white ${
-                    bookingData.status === true ? "bg-green-500" : "bg-red-500"
+                    payment.status === true ? "bg-green-500" : "bg-red-500"
                   }`}
                 >
-                  {bookingData.status === true
+                  {payment.status === true
                     ? "Đã thanh toán"
                     : "Chưa thanh toán"}
                 </span>
@@ -277,7 +308,7 @@ const BookingSuccess = () => {
           </div>
 
           {/* QR Payment Section - Only shown for online payment */}
-          {isOnlinePayment && (
+          {isOnlinePayment && !payment.status && (
             <div className="border-b border-gray-200 p-6">
               <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-6">
                 <div className="mb-4 flex items-center justify-center">
@@ -293,7 +324,7 @@ const BookingSuccess = () => {
                     <img
                       src={qrCodeUrl}
                       alt="Payment QR Code"
-                      className="h-56 w-56"
+                      className="h-60 w-60"
                     />
                   </div>
                 </div>
