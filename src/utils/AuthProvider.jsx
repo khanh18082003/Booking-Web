@@ -7,6 +7,7 @@ export const useStore = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [store, setStore] = useState({
     userProfile: null,
+    hostProfile: null,
     apiLoading: false,
     activeApiCalls: 0, // Track number of ongoing API calls
   });

@@ -172,7 +172,6 @@ const Personal = () => {
         default:
           break;
       }
-      console.log("Data to be sent:", data);
 
       const response = await axios.patch(endpoint, data);
 
@@ -203,8 +202,6 @@ const Personal = () => {
             },
           };
         });
-
-        console.log("Profile updated successfully:", store.userProfile);
 
         // Exit edit mode
         setEditingSectionIndex(null);

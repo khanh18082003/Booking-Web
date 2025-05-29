@@ -38,15 +38,7 @@ const FinishedBooking = () => {
     specialRequests,
     country,
   } = JSON.parse(localStorage.getItem("bookingFormData") || "{}");
-  console.log("Booking form data:", {
-    firstName,
-    lastName,
-    email,
-    phone,
-    phone_code,
-    specialRequests,
-    country,
-  });
+
   const params = new URLSearchParams(location.search);
   const adults = params.get("adults");
   const children = params.get("children");
@@ -153,15 +145,14 @@ const FinishedBooking = () => {
       // Add either user_id or guest information based on login status
       if (store.userProfile) {
         requestBody.user_id = store.userProfile.id;
-      } else {
-        requestBody.guest = {
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-          phone_number: phone,
-          country: country || "Vietnam", // Default to Vietnam if not provided
-        };
       }
+      requestBody.guest = {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        phone_number: phone,
+        country: country,
+      };
 
       // Make API call to create booking
       const response = await axios.post("/bookings", requestBody);

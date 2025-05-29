@@ -1,4 +1,4 @@
-import AppLayout from "./components/layout/AppLayout";
+import UserLayout from "./components/layout/UserLayout";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./page/Home";
 import Login from "./page/Login";
@@ -23,6 +23,7 @@ import HostRegister from "./host/page/HostRegister";
 import PropertiesType from "./host/page/PropertiesType";
 import AddProperty from "./host/page/AddProperty";
 import HostDashboard from "./host/page/HostDashboard";
+import BookingHistory from "./page/BookingHistory";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -50,7 +51,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AppLayout />}>
+        <Route path="/" element={<UserLayout />}>
           <Route index element={<Home />} />
           <Route path="properties/:id/:propertiesName" element={<RoomDetail />}>
             <Route index element={<Navigate to="overview" replace />} />
@@ -65,6 +66,7 @@ function App() {
             path="properties/:id/:propertiesName/booking-confirmation"
             element={<BookingConfirmation />}
           />
+          <Route path="mytrips" element={<BookingHistory />} />
           <Route path="booking/:id" element={<FinishedBooking />} />
           <Route path="booking/success" element={<BookingSuccess />} />
           <Route path="myaccount" element={<Profile />} />

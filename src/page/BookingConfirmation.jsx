@@ -45,7 +45,7 @@ const BookingConfirmation = () => {
   // State to track textarea focus for animation
   const [textareaFocused, setTextareaFocused] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const { id } = useParams();
+  const { id, propertiesName } = useParams();
   const params = new URLSearchParams(location.search);
   const adults = params.get("adults");
   const children = params.get("children");
@@ -86,14 +86,11 @@ const BookingConfirmation = () => {
         "Không thể tải thông tin phòng. Hệ thống sẽ đưa bạn về trang chọn phòng.";
       setErrorMessage(errorMsg);
 
-      // Get property name from bookingData or use a default value
-      const propertyName = bookingData?.properties?.slug || "info";
-
       // Set timeout to redirect after showing the error message
       setTimeout(() => {
         // Navigate back to the property page with search parameters
         navigate(
-          `/properties/${id}/${propertyName}/info?${new URLSearchParams({
+          `/properties/${id}/${propertiesName}/info?${new URLSearchParams({
             checkin: checkIn,
             checkout: checkOut,
             adults: adults,
@@ -337,7 +334,7 @@ const BookingConfirmation = () => {
                 {store.userProfile ? (
                   <div className="rounded-full border-2 border-amber-500">
                     <img
-                      src={store.userProfile.avatar}
+                      src={store.userProfile?.avatar}
                       alt="User Avatar"
                       className="h-12 w-12 rounded-full object-cover"
                     />
@@ -351,7 +348,7 @@ const BookingConfirmation = () => {
               <div>
                 {store.userProfile ? (
                   <div>
-                    <span>Bạn đã được đăng nhập</span>
+                    <span className="font-bold">Bạn đã được đăng nhập</span>
                     <p>{store.userProfile.email}</p>
                   </div>
                 ) : (

@@ -114,7 +114,7 @@ const Profile = () => {
                   />
                 ) : (
                   <span className="text-3xl font-bold text-[#003580]">
-                    {user.name.charAt(0)}
+                    {user?.email.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>

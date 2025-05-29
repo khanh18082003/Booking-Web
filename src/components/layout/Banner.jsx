@@ -3,7 +3,7 @@ import FormSearchBox from "../FormSearchBox/FormSearchBox";
 import PropTypes from "prop-types";
 
 const Banner = ({ showTitle = true }) => {
-  const { store, setStore } = useStore();
+  const { store } = useStore();
   return (
     <div
       className={`relative z-[1000] w-full bg-primary text-white ${showTitle ? "mb-[96px]" : "mb-[96px] max-lg:mb-[200px]"}`}
