@@ -86,6 +86,7 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
       <div className="mt-4 flex flex-col lg:mt-0">
         <Link
           to="/myaccount"
+          onClick={() => closeAccountOptional()}
           className="flex items-center gap-4 px-6 py-4 hover:bg-gray-100"
         >
           <MdPerson2 className="text-xl" />
@@ -93,6 +94,7 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
         </Link>
         <Link
           to="/mytrips"
+          onClick={() => closeAccountOptional()}
           className="flex items-center gap-4 px-6 py-4 hover:bg-gray-100"
         >
           <RiLuggageDepositLine className="text-xl" />
@@ -100,6 +102,7 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
         </Link>
         <Link
           to="/reviews"
+          onClick={() => closeAccountOptional()}
           className="flex items-center gap-4 px-6 py-4 hover:bg-gray-100"
         >
           <FaRegCommentDots className="text-xl" />
@@ -107,6 +110,7 @@ const AccountOptional = ({ isVisible, closeAccountOptional, avatar, name }) => {
         </Link>
         <Link
           to="/favorites"
+          onClick={() => closeAccountOptional()}
           className="flex items-center gap-4 px-6 py-4 hover:bg-gray-100"
         >
           <FaRegHeart className="text-xl" />

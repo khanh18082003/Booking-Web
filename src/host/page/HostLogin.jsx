@@ -7,7 +7,6 @@ import { BsEyeSlashFill } from "react-icons/bs";
 import { IoEyeSharp } from "react-icons/io5";
 import { useStore } from "../../utils/AuthProvider";
 import { setPageTitle } from "../../utils/pageTitle";
-import { useLocation } from "react-router-dom";
 
 const HostLogin = () => {
   const navigate = useNavigate();
@@ -19,7 +18,6 @@ const HostLogin = () => {
   const [error, setError] = useState("");
   const [hasError, setHasError] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const location = useLocation();
 
   useEffect(() => {
     setPageTitle("Đăng nhập Host");
@@ -58,8 +56,7 @@ const HostLogin = () => {
       const accessToken = responseBody.data.access_token;
       localStorage.setItem("hostAccessToken", accessToken);
 
-      const redirectTo = location.state?.from || "/dashboard";
-      navigate(redirectTo, { replace: true });
+      navigate("/host/dashboard");
     } catch (error) {
       if (
         error.response?.status === 401 &&
