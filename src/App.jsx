@@ -23,6 +23,7 @@ import HostRegister from "./host/page/HostRegister";
 import PropertiesType from "./host/page/PropertiesType";
 import AddProperty from "./host/page/AddProperty";
 import HostDashboard from "./host/page/HostDashboard";
+import Accommodation from "./host/page/Accommodation";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -83,6 +84,7 @@ function App() {
           <Route path="/host/register" element={<HostRegister />} />
           <Route path="/host/properties-type" element={<PropertiesType />} />
           <Route path="/host/add-property" element={<AddProperty />} />
+          <Route path="/host/property/:id" element={<Accommodation />} />
         </Route>
       </Routes>
     </BrowserRouter>
