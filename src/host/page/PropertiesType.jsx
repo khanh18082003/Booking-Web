@@ -85,9 +85,6 @@ const PropertiesType = () => {
           </div>
         ))}
       </div>{" "}
-      <button onClick={() => handleSelect("villa")}>Villa</button>
-      <button onClick={() => handleSelect("hotel")}>Hotel</button>
-      <button onClick={() => handleSelect("apartment")}>Apartment</button>
     </div>
   );
 };

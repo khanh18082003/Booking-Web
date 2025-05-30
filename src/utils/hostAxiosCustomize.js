@@ -32,7 +32,6 @@ export const registerLoadingHandlers = (start, finish) => {
 const hostInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 45000,
-  headers: { "Content-Type": "application/json" },
   withCredentials: true,
 });
 
@@ -40,8 +39,8 @@ const hostInstance = axios.create({
 hostInstance.interceptors.request.use(
   function (config) {
     // Check if this endpoint should show loading state
-    const shouldShowLoading = !noLoadingEndpoints.some((endpoint) =>
-      config.url.includes(endpoint),
+    const shouldShowLoading = !noLoadingEndpoints.some(
+      (endpoint) => config.url === endpoint,
     );
 
     // Start loading state for this request if needed

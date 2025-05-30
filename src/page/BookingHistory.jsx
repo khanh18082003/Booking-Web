@@ -13,6 +13,9 @@ const BookingHistory = () => {
   const [activeTab, setActiveTab] = useState("COMPLETED");
 
   useEffect(() => {
+    if (!store.userProfile) {
+      return;
+    }
     const fetchBookings = async () => {
       try {
         setLoading(true);
@@ -41,7 +44,7 @@ const BookingHistory = () => {
     };
 
     fetchBookings();
-  }, []);
+  }, [store.userProfile]);
 
   const filteredConfirmedBookings = bookings.filter(
     (booking) => booking.status === "CONFIRMED",

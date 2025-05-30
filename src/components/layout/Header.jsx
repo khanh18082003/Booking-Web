@@ -1,8 +1,10 @@
 import { Link } from "react-router";
 import logo from "../../assets/logo.svg";
 import PropTypes from "prop-types";
+import { useStore } from "../../utils/AuthProvider";
 
 const Header = (props) => {
+  const { store } = useStore();
   return (
     <div className="bg-primary">
       <div className="pt-2">
@@ -12,7 +14,7 @@ const Header = (props) => {
             <div className="flex grow items-center py-2 pr-4">
               <div className="flex w-[96px] items-center lg:w-[144px]">
                 <Link
-                  to="/"
+                  to={store.hostProfile != null ? "/host/dashboard" : "/"}
                   aria-label="Booking.com"
                   className="box-border inline-flex w-full text-start align-top"
                 >

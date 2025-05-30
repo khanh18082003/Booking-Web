@@ -19,6 +19,9 @@ const HostDashboard = () => {
 
   useEffect(() => {
     const fetchProperties = async () => {
+      if (!store.hostProfile) {
+        return;
+      }
       try {
         setLoading(true);
         const response = await hostAxios.get("/properties/host-properties");
@@ -40,7 +43,7 @@ const HostDashboard = () => {
     };
 
     fetchProperties();
-  }, []);
+  }, [store.hostProfile]);
 
   const handleAddProperty = () => {
     navigate("/host/properties-type");
@@ -186,7 +189,7 @@ const HostDashboard = () => {
         <h1 className="text-3xl font-bold text-gray-800">Quản lý chỗ nghỉ</h1>
         <button
           onClick={handleAddProperty}
-          className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
+          className="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
         >
           + Thêm chỗ nghỉ mới
         </button>

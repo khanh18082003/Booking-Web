@@ -37,8 +37,8 @@ const instance = axios.create({
 instance.interceptors.request.use(
   function (config) {
     // Check if this endpoint should show loading state
-    const shouldShowLoading = !noLoadingEndpoints.some((endpoint) =>
-      config.url.includes(endpoint),
+    const shouldShowLoading = !noLoadingEndpoints.some(
+      (endpoint) => config.url === endpoint,
     );
 
     // Start loading state for this request if needed

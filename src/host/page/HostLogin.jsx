@@ -46,7 +46,7 @@ const HostLogin = () => {
       });
 
       const responseBody = response.data;
-      console.log("Login response:", responseBody);
+
       if (responseBody.code !== "M000") {
         setError(responseBody.message);
         setHasError(true);

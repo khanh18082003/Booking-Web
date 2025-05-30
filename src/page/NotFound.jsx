@@ -1,8 +1,10 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
+import { useStore } from "../utils/AuthProvider";
 
 const NotFound = () => {
+  const { store } = useStore();
   useEffect(() => {
     setPageTitle(PAGE_TITLES.NOT_FOUND);
   }, []);
@@ -17,7 +19,7 @@ const NotFound = () => {
         The page you are looking for does not exist or has been moved.
       </p>
       <Link
-        to="/"
+        to={store.hostProfile != null ? "/host/dashboard" : "/"}
         className="mt-6 inline-block rounded-lg bg-blue-500 px-6 py-3 text-white transition duration-300 hover:bg-blue-600"
       >
         Go Back to Home

@@ -1,52 +1,42 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "../../utils/axiosCustomize";
+import hostAxios from "../../utils/hostAxiosCustomize";
+import axios from "axios";
+import countries from "../../utils/countries";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
+
 const PROPERTY_TYPE_MAP = {
   villa: {
     type_id: 1,
-    name: "DELUXE VILLA",
-    image:
-      "https://cf.bstatic.com/xdata/images/hotel/square600/559484004.webp?k=d4b3c0795ecaed2cd701671761cc076f87ce2f592756c743926c1fb7881aa0d4&o=",
-    description:
-      "Tọa lạc ở Huế, DELUXE VILLA cung cấp chỗ nghỉ có Wi-Fi miễn phí, điều hòa, xe đạp miễn phí và khu vườn với hồ bơi ngoài trời mở quanh năm. Biệt thự cung cấp phòng chờ chung, nhà hàng, cũng như quầy bar.Có sân hiên nhìn ra thành phố, biệt thự có 4 phòng ngủ, phòng khách, TV màn hình phẳng truyền hình vệ tinh, bếp đầy đủ tiện nghi, 4 phòng tắm với vòi xịt/chậu rửa vệ sinh và vòi sen. Khăn tắm và ga trải giường có sẵn ở biệt thự.Thành thạo tiếng Anh và tiếng Việt, đội ngũ nhân viên luôn túc trực 24/7 tại lễ tân.Khách tại biệt thự có thể sử dụng phòng tập gym hoặc thư giãn ở trung tâm chăm sóc sức khỏe, bao gồm hồ bơi trong nhà, phòng xông hơi khô và bể sục. Khách có thể sử dụng sân chơi trẻ em và BBQ tại DELUXE VILLA. Chỗ nghỉ cách Cầu Tràng Tiền 2.4 km. Sân bay quốc tế Phú Bài cách 13 km, đồng thời chỗ nghỉ có cung cấp dịch vụ đưa đón sân bay mất phí.",
-    extra_images: [
-      "https://cf.bstatic.com/xdata/images/hotel/max1280x900/559484004.jpg?k=77a40a4e501e6f5484d3a2a8c5d10c227a9d419afd726ea3b916072b2028468c&o=&hp=1",
-      "https://cf.bstatic.com/xdata/images/hotel/max1280x900/578846090.jpg?k=ba7c83bd181321a13cf7cd9d4b7d5bc9329e82df6c849c6b61924d8c3a1ee738&o=&hp=1",
-      "https://cf.bstatic.com/xdata/images/hotel/max1280x900/577522766.jpg?k=50709226cb56e1a9caa5e4b8deadfbd1ac60b41eb404700506c0b92e88523f08&o=&hp=1",
-    ],
+    name: "",
+    image: "",
+    description: "",
+    extra_images: [],
   },
   hotel: {
     type_id: 2,
-    name: "DELUXE HOTEL",
-    image:
-      "https://cf.bstatic.com/xdata/images/hotel/square600/559484004.webp?k=d4b3c0795ecaed2cd701671761cc076f87ce2f592756c743926c1fb7881aa0d4&o=",
-    description:
-      "Khách sạn hiện đại, đầy đủ tiện nghi, vị trí trung tâm, phục vụ chuyên nghiệp, có nhà hàng, phòng gym, hồ bơi, wifi miễn phí.",
-    extra_images: [
-      "https://cf.bstatic.com/xdata/images/hotel/max1280x900/559484004.jpg?k=77a40a4e501e6f5484d3a2a8c5d10c227a9d419afd726ea3b916072b2028468c&o=&hp=1",
-      "https://cf.bstatic.com/xdata/images/hotel/max1280x900/578846090.jpg?k=ba7c83bd181321a13cf7cd9d4b7d5bc9329e82df6c849c6b61924d8c3a1ee738&o=&hp=1",
-    ],
+    name: "",
+    image: "",
+    description: "",
+    extra_images: [],
   },
   apartment: {
-    type_id: 3,
-    name: "DELUXE APARTMENT",
-    image:
-      "https://cf.bstatic.com/xdata/images/hotel/square600/559484004.webp?k=d4b3c0795ecaed2cd701671761cc076f87ce2f592756c743926c1fb7881aa0d4&o=",
-    description:
-      "Căn hộ tiện nghi, phù hợp gia đình, có bếp, phòng khách, wifi miễn phí, gần trung tâm.",
-    extra_images: [
-      "https://cf.bstatic.com/xdata/images/hotel/max1280x900/559484004.jpg?k=77a40a4e501e6f5484d3a2a8c5d10c227a9d419afd726ea3b916072b2028468c&o=&hp=1",
-    ],
+    type_id: 1,
+    name: "",
+    image: "",
+    description: "",
+    extra_images: [],
   },
 };
 
 const DEFAULT_ADDRESS = {
-  address: "20 Lý Tự Trọng",
-  ward: "phường Xuân Phú",
-  district: "Quận Thuận Hóa",
-  city: "Tp.Huế",
-  province: "TP.Huế",
-  country: "Việt Nam",
+  address: "",
+  ward: "",
+  district: "",
+  city: "",
+  province: "",
+  country: "",
 };
 
 const getBase64 = (file) =>
@@ -60,7 +50,6 @@ const getBase64 = (file) =>
 const AddProperty = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   // Lấy type từ query param
   const searchParams = new URLSearchParams(location.search);
   const type = searchParams.get("type") || "villa";
@@ -78,13 +67,19 @@ const AddProperty = () => {
   // State amenities
   const [amenities, setAmenities] = useState([]);
 
-  // ...existing code...
+  const [selectedCountry, setSelectedCountry] = useState("Vietnam");
+  const [selectedProvince, setSelectedProvince] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedWard, setSelectedWard] = useState("");
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
 
   useEffect(() => {
     // Fetch amenities từ API thật
     const fetchAmenities = async () => {
       try {
-        const res = await axios.get("/amenities");
+        const res = await hostAxios.get("/amenities");
         if (res.data.code === "M000") {
           setAmenities(res.data.data.data); // data.data là mảng amenities
         }
@@ -94,6 +89,45 @@ const AddProperty = () => {
     };
     fetchAmenities();
   }, []);
+
+  // Fetch provinces when country is Vietnam
+  useEffect(() => {
+    if (selectedCountry === "Vietnam") {
+      fetch("https://provinces.open-api.vn/api/")
+        .then((res) => res.json())
+        .then((data) => setProvinces(data))
+        .catch(() => setProvinces([]));
+    } else {
+      setProvinces([]);
+      setDistricts([]);
+      setWards([]);
+    }
+  }, [selectedCountry]);
+
+  // Fetch districts when province changes
+  useEffect(() => {
+    if (selectedCountry === "Vietnam" && selectedProvince) {
+      fetch(`https://provinces.open-api.vn/api/p/${selectedProvince}?depth=2`)
+        .then((res) => res.json())
+        .then((data) => setDistricts(data.districts || []))
+        .catch(() => setDistricts([]));
+    } else {
+      setDistricts([]);
+      setWards([]);
+    }
+  }, [selectedCountry, selectedProvince]);
+
+  // Fetch wards when district changes
+  useEffect(() => {
+    if (selectedCountry === "Vietnam" && selectedDistrict) {
+      fetch(`https://provinces.open-api.vn/api/d/${selectedDistrict}?depth=2`)
+        .then((res) => res.json())
+        .then((data) => setWards(data.wards || []))
+        .catch(() => setWards([]));
+    } else {
+      setWards([]);
+    }
+  }, [selectedCountry, selectedDistrict]);
 
   // Khi đổi loại property
   const handleTypeChange = (e) => {
@@ -120,21 +154,85 @@ const AddProperty = () => {
     });
   };
 
+  // Khi chọn quốc gia
+  const handleCountryChange = (e) => {
+    setSelectedCountry(e.target.value);
+    setSelectedProvince("");
+    setSelectedDistrict("");
+    setSelectedWard("");
+    setProperty((p) => ({
+      ...p,
+      country: e.target.value,
+      province: "",
+      district: "",
+      ward: "",
+    }));
+  };
+  // Khi chọn tỉnh/thành
+  const handleProvinceChange = (e) => {
+    setSelectedProvince(e.target.value);
+    setSelectedDistrict("");
+    setSelectedWard("");
+    setProperty((p) => ({
+      ...p,
+      province: e.target.value,
+      district: "",
+      ward: "",
+    }));
+  };
+  // Khi chọn quận/huyện
+  const handleDistrictChange = (e) => {
+    setSelectedDistrict(e.target.value);
+    setSelectedWard("");
+    setProperty((p) => ({ ...p, district: e.target.value, ward: "" }));
+  };
+  // Khi chọn phường/xã
+  const handleWardChange = (e) => {
+    setSelectedWard(e.target.value);
+    setProperty((p) => ({ ...p, ward: e.target.value }));
+  };
+
   // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
+
+    // Lấy tên province, district, ward từ code
+    let provinceName = property.province;
+    let districtName = property.district;
+    let wardName = property.ward;
+    let cityName = property.city;
+
+    if (selectedCountry === "Vietnam") {
+      const foundProvince = provinces.find(
+        (p) => String(p.code) === String(selectedProvince),
+      );
+      provinceName = foundProvince ? foundProvince.name : property.province;
+      // Nếu là thành phố trực thuộc trung ương thì city = province
+      cityName =
+        foundProvince && foundProvince.name.includes("Thành phố")
+          ? foundProvince.name
+          : "";
+      const foundDistrict = districts.find(
+        (d) => String(d.code) === String(selectedDistrict),
+      );
+      districtName = foundDistrict ? foundDistrict.name : property.district;
+      const foundWard = wards.find(
+        (w) => String(w.code) === String(selectedWard),
+      );
+      wardName = foundWard ? foundWard.name : property.ward;
+    }
 
     // Tạo object request với amenities_id là mảng id
     const requestObj = {
       name: property.name,
       description: property.description,
       address: property.address,
-      ward: property.ward,
-      district: property.district,
-      city: property.city,
-      province: property.province,
-      country: property.country,
+      ward: wardName,
+      district: districtName,
+      city: cityName,
+      province: provinceName,
+      country: selectedCountry,
       status: property.status,
       check_in_time: property.check_in_time,
       check_out_time: property.check_out_time,
@@ -145,7 +243,7 @@ const AddProperty = () => {
       "request",
       new Blob([JSON.stringify(requestObj)], { type: "application/json" }),
     );
-
+    console.log("Request object:", requestObj);
     // Thêm file ảnh đại diện
     if (property.imageFile) {
       formData.append("image", property.imageFile);
@@ -160,16 +258,12 @@ const AddProperty = () => {
 
     try {
       console.log("Submitting property:", formData);
-      console.log("Request object:", requestObj);
-      console.log("Extra images:", property.extraImageFiles);
-      console.log("image file:", property.imageFile);
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-      await axios.post("/properties", formData);
+
+      await hostAxios.post("/properties", formData);
       alert("Tạo chỗ nghỉ thành công!");
-      navigate("/host/properties");
+      navigate("/host/dashboard");
     } catch (err) {
+      console.error("Error creating property:", err);
       alert("Tạo chỗ nghỉ thất bại!");
     }
   };
@@ -211,14 +305,13 @@ const AddProperty = () => {
         </div>
         <div>
           <label className="mb-2 block font-medium text-gray-700">Mô tả</label>
-          <textarea
-            className="w-full rounded border px-3 py-2"
-            rows={4}
+          <ReactQuill
+            theme="snow"
             value={property.description}
-            onChange={(e) =>
-              setProperty((p) => ({ ...p, description: e.target.value }))
+            onChange={(value) =>
+              setProperty((p) => ({ ...p, description: value }))
             }
-            required
+            style={{ background: "white" }}
           />
         </div>
         {/* Ảnh đại diện */}
@@ -318,78 +411,129 @@ const AddProperty = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-2 block font-medium text-gray-700">
-              Địa chỉ
+              Quốc gia
+            </label>
+            <select
+              className="w-full rounded border px-3 py-2"
+              value={selectedCountry}
+              onChange={handleCountryChange}
+              required
+            >
+              {countries.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* Tỉnh/Thành */}
+          <div>
+            <label className="mb-2 block font-medium text-gray-700">
+              Tỉnh/Thành
+            </label>
+            {selectedCountry === "Vietnam" ? (
+              <select
+                className="w-full rounded border px-3 py-2"
+                value={selectedProvince}
+                onChange={handleProvinceChange}
+                required
+                disabled={selectedCountry !== "Vietnam"}
+              >
+                <option value="">Chọn tỉnh/thành</option>
+                {provinces.map((p) => (
+                  <option key={p.code} value={p.code}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="w-full rounded border px-3 py-2"
+                type="text"
+                value={property.province}
+                onChange={(e) =>
+                  setProperty((p) => ({ ...p, province: e.target.value }))
+                }
+                required
+                placeholder="Nhập tỉnh/thành"
+              />
+            )}
+          </div>
+          {/* Quận/Huyện */}
+          <div>
+            <label className="mb-2 block font-medium text-gray-700">
+              Quận/Huyện
+            </label>
+            {selectedCountry === "Vietnam" ? (
+              <select
+                className="w-full rounded border px-3 py-2"
+                value={selectedDistrict}
+                onChange={handleDistrictChange}
+                required
+                disabled={!selectedProvince}
+              >
+                <option value="">Chọn quận/huyện</option>
+                {districts.map((d) => (
+                  <option key={d.code} value={d.code}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="w-full rounded border px-3 py-2"
+                type="text"
+                value={property.district}
+                onChange={(e) =>
+                  setProperty((p) => ({ ...p, district: e.target.value }))
+                }
+                required
+                placeholder="Nhập quận/huyện"
+              />
+            )}
+          </div>
+          {/* Phường/Xã */}
+          <div>
+            <label className="mb-2 block font-medium text-gray-700">
+              Phường/Xã
+            </label>
+            {selectedCountry === "Vietnam" ? (
+              <select
+                className="w-full rounded border px-3 py-2"
+                value={selectedWard}
+                onChange={handleWardChange}
+                required
+                disabled={!selectedDistrict}
+              >
+                <option value="">Chọn phường/xã</option>
+                {wards.map((w) => (
+                  <option key={w.code} value={w.code}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="w-full rounded border px-3 py-2"
+                type="text"
+                value={property.ward}
+                onChange={(e) =>
+                  setProperty((p) => ({ ...p, ward: e.target.value }))
+                }
+                required
+                placeholder="Nhập phường/xã"
+              />
+            )}
+          </div>
+          <div className="col-span-2">
+            <label className="mb-2 block font-medium text-gray-700">
+              Địa chỉ (đường, số nhà...)
             </label>
             <input
               className="w-full rounded border px-3 py-2"
               value={property.address}
               onChange={(e) =>
                 setProperty((p) => ({ ...p, address: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div>
-            <label className="mb-2 block font-medium text-gray-700">
-              Phường/Xã
-            </label>
-            <input
-              className="w-full rounded border px-3 py-2"
-              value={property.ward}
-              onChange={(e) =>
-                setProperty((p) => ({ ...p, ward: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div>
-            <label className="mb-2 block font-medium text-gray-700">
-              Quận/Huyện
-            </label>
-            <input
-              className="w-full rounded border px-3 py-2"
-              value={property.district}
-              onChange={(e) =>
-                setProperty((p) => ({ ...p, district: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div>
-            <label className="mb-2 block font-medium text-gray-700">
-              Thành phố
-            </label>
-            <input
-              className="w-full rounded border px-3 py-2"
-              value={property.city}
-              onChange={(e) =>
-                setProperty((p) => ({ ...p, city: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div>
-            <label className="mb-2 block font-medium text-gray-700">
-              Tỉnh/Thành
-            </label>
-            <input
-              className="w-full rounded border px-3 py-2"
-              value={property.province}
-              onChange={(e) =>
-                setProperty((p) => ({ ...p, province: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div>
-            <label className="mb-2 block font-medium text-gray-700">
-              Quốc gia
-            </label>
-            <input
-              className="w-full rounded border px-3 py-2"
-              value={property.country}
-              onChange={(e) =>
-                setProperty((p) => ({ ...p, country: e.target.value }))
               }
               required
             />
