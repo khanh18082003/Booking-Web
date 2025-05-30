@@ -89,7 +89,7 @@ function App() {
           <Route path="register" element={<HostRegister />} />
           <Route path="properties-type" element={<PropertiesType />} />
           <Route path="add-property" element={<AddProperty />} />
-          <Route path="/host/property/:id" element={<Accommodation />} />
+          <Route path="property/:id" element={<Accommodation />} />
         </Route>
       </Routes>
     </BrowserRouter>
