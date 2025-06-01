@@ -26,6 +26,7 @@ import HostDashboard from "./host/page/HostDashboard";
 import BookingHistory from "./page/BookingHistory";
 import HostLayout from "./components/layout/HostLayout";
 import Accommodation from "./host/page/Accommodation";
+import Authentication from "./components/common/Authentication";
 
 /**
  * The main application component that initializes AOS (Animate On Scroll) library
@@ -77,6 +78,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
         <Route element={<AuthenticationLayout />}>
+          <Route path="authentication" element={<Authentication />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="verify-email" element={<VerifyEmail />} />

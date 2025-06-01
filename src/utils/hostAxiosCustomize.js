@@ -65,7 +65,7 @@ hostInstance.interceptors.request.use(
     const isNoAuthEndpoint = noAuthEndpoints.some((endpoint) =>
       config.url.includes(endpoint),
     );
-    const token = localStorage.getItem("hostAccessToken");
+    const token = sessionStorage.getItem("hostAccessToken");
 
     if (!isNoAuthEndpoint && token) {
       config.headers["Authorization"] = `Bearer ${token}`;
@@ -110,13 +110,13 @@ hostInstance.interceptors.response.use(
       if (!isNoAuthEndpoint) {
         try {
           const response = await hostInstance.post("/auth/host/refresh-token", {
-            access_token: localStorage.getItem("hostAccessToken"),
+            access_token: sessionStorage.getItem("hostAccessToken"),
           });
 
           const newAccessToken = response.data.data.access_token;
 
           // Persist the new access token
-          localStorage.setItem("hostAccessToken", newAccessToken);
+          sessionStorage.setItem("hostAccessToken", newAccessToken);
 
           // Update the original request with the new token
           originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
@@ -127,7 +127,7 @@ hostInstance.interceptors.response.use(
           console.error("Error refreshing host token:", err);
 
           // Clear the token and redirect to the host login page on error
-          localStorage.removeItem("hostAccessToken");
+          sessionStorage.removeItem("hostAccessToken");
           window.location.href = "/host/login";
         }
       }

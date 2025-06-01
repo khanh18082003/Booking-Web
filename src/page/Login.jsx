@@ -1,12 +1,13 @@
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import axios from "../utils/axiosCustomize";
 import { useState, useEffect } from "react";
 import { BsEyeSlashFill } from "react-icons/bs";
 import { IoEyeSharp } from "react-icons/io5";
 import { useStore } from "../utils/AuthProvider";
 import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
+import { OAuthConfig } from "../utils/OAuthConfiguration";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,15 +19,6 @@ const Login = () => {
   const [error, setError] = useState(""); // State to track error message
   const [hasError, setHasError] = useState(false); // State to track input error styling
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
-  // Debug: log location state
-  useEffect(() => {
-    console.log("Login page received location state:", location.state);
-    console.log(
-      "Local storage returnToPath:",
-      localStorage.getItem("returnToPath"),
-    );
-  }, [location]);
 
   useEffect(() => {
     setPageTitle(PAGE_TITLES.LOGIN);
@@ -41,6 +33,23 @@ const Login = () => {
     setFormData({ ...formData, [name]: value });
     setError(""); // Clear error message when user starts typing
     setHasError(false); // Reset input styling
+  };
+
+  // handle submit google and facebook login
+  const handleLoginGoogle = () => {
+    // Implement Google login logic here
+    console.log("Google login clicked");
+    const callbackUrl = OAuthConfig.redirectUri;
+    const authUrl = OAuthConfig.authUri;
+    const googleClientId = OAuthConfig.clientId;
+
+    const targetUrl = `${authUrl}?redirect_uri=${encodeURIComponent(
+      callbackUrl,
+    )}&response_type=code&client_id=${googleClientId}&scope=openid%20email%20profile`;
+
+    console.log(targetUrl);
+
+    window.location.href = targetUrl;
   };
 
   const handleSubmit = async (e) => {
@@ -186,7 +195,10 @@ const Login = () => {
           <hr className="flex-1 border-gray-300" />
         </div>
         <div className="flex items-center justify-center gap-4">
-          <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2 shadow-sm transition hover:border-blue-500">
+          <button
+            onClick={handleLoginGoogle}
+            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2 shadow-sm transition hover:border-blue-500"
+          >
             <FcGoogle className="text-2xl" />
             <span className="font-medium text-gray-700">Google</span>
           </button>

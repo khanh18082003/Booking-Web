@@ -15,7 +15,7 @@ const HostLayout = () => {
   const [showAccountBox, setShowAccountBox] = useState(false);
   const accountRef = useRef(null);
   const navigate = useNavigate();
-  const isAuthenticated = localStorage.getItem("hostAccessToken") !== null;
+  const isAuthenticated = sessionStorage.getItem("hostAccessToken") !== null;
 
   // Đóng box khi click ra ngoài
   useEffect(() => {
@@ -65,11 +65,11 @@ const HostLayout = () => {
     const logout = async () => {
       try {
         await hostAxios.post("/auth/host/logout", {
-          access_token: localStorage.getItem("hostAccessToken"),
+          access_token: sessionStorage.getItem("hostAccessToken"),
         });
 
         // Clear user data from local storage and context
-        localStorage.removeItem("hostAccessToken");
+        sessionStorage.removeItem("hostAccessToken");
         setStore((prev) => ({
           ...prev,
           hostProfile: null,

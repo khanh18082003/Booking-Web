@@ -54,7 +54,7 @@ const HostLogin = () => {
       }
 
       const accessToken = responseBody.data.access_token;
-      localStorage.setItem("hostAccessToken", accessToken);
+      sessionStorage.setItem("hostAccessToken", accessToken);
 
       navigate("/host/dashboard");
     } catch (error) {

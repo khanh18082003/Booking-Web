@@ -498,13 +498,20 @@ const BookingConfirmation = () => {
                         name="phone_code"
                         value={formData.phone_code}
                         onChange={handleChange}
-                        className="rounded-md border border-gray-300 bg-white px-3 py-2 focus:border-[#006ce4] focus:ring-[#006ce4] focus:outline-none"
+                        className="w-[100px] rounded-md border border-gray-300 bg-white px-3 py-2 focus:border-[#006ce4] focus:ring-[#006ce4] focus:outline-none"
                       >
-                        {countries.map((country, index) => (
-                          <option key={index} value={country.dialCode}>
-                            {country.code} {country.dialCode}
-                          </option>
-                        ))}
+                        {countries.map((country, index) => {
+                          const dialCodes = country.dialCode.split(", ");
+                          return dialCodes.map((dialCode) => (
+                            <option
+                              key={index}
+                              value={dialCode}
+                              className="w-[100px]"
+                            >
+                              {country.code} {dialCode}
+                            </option>
+                          ));
+                        })}
                       </select>
                       <input
                         type="tel"

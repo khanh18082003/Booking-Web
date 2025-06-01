@@ -3,6 +3,20 @@ import { useNavigate } from "react-router-dom";
 import hostAxios from "../../utils/hostAxiosCustomize";
 import { useStore } from "../../utils/AuthProvider";
 import { FaEdit, FaEye, FaTimes, FaSave } from "react-icons/fa";
+import { GoPlus } from "react-icons/go";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
+import countries from "../../utils/countries";
+import { PAGE_TITLES, setPageTitle } from "../../utils/pageTitle";
+
+// Helper function để convert file thành base64
+const getBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
 const HostDashboard = () => {
   const navigate = useNavigate();
@@ -16,6 +30,22 @@ const HostDashboard = () => {
   const [editingProperty, setEditingProperty] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+
+  // States cho địa chỉ Việt Nam
+  const [selectedCountry, setSelectedCountry] = useState("Vietnam");
+  const [selectedProvince, setSelectedProvince] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedWard, setSelectedWard] = useState("");
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+
+  // States cho ảnh
+  const [amenities, setAmenities] = useState([]);
+
+  useEffect(() => {
+    setPageTitle(PAGE_TITLES.DASHBOARD_HOST);
+  }, []);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -45,6 +75,63 @@ const HostDashboard = () => {
     fetchProperties();
   }, [store.hostProfile]);
 
+  // Fetch amenities
+  useEffect(() => {
+    const fetchAmenities = async () => {
+      if (!store.hostProfile) {
+        return;
+      }
+      try {
+        const res = await hostAxios.get("/amenities");
+        if (res.data.code === "M000") {
+          setAmenities(res.data.data.data); // data.data là mảng amenities
+        }
+      } catch (err) {
+        setAmenities([]);
+      }
+    };
+    fetchAmenities();
+  }, [store.hostProfile]);
+
+  // Fetch provinces when country is Vietnam
+  useEffect(() => {
+    if (selectedCountry === "Vietnam") {
+      fetch("https://provinces.open-api.vn/api/")
+        .then((res) => res.json())
+        .then((data) => setProvinces(data))
+        .catch(() => setProvinces([]));
+    } else {
+      setProvinces([]);
+      setDistricts([]);
+      setWards([]);
+    }
+  }, [selectedCountry]);
+
+  // Fetch districts when province changes
+  useEffect(() => {
+    if (selectedCountry === "Vietnam" && selectedProvince) {
+      fetch(`https://provinces.open-api.vn/api/p/${selectedProvince}?depth=2`)
+        .then((res) => res.json())
+        .then((data) => setDistricts(data.districts || []))
+        .catch(() => setDistricts([]));
+    } else {
+      setDistricts([]);
+      setWards([]);
+    }
+  }, [selectedCountry, selectedProvince]);
+
+  // Fetch wards when district changes
+  useEffect(() => {
+    if (selectedCountry === "Vietnam" && selectedDistrict) {
+      fetch(`https://provinces.open-api.vn/api/d/${selectedDistrict}?depth=2`)
+        .then((res) => res.json())
+        .then((data) => setWards(data.wards || []))
+        .catch(() => setWards([]));
+    } else {
+      setWards([]);
+    }
+  }, [selectedCountry, selectedDistrict]);
+
   const handleAddProperty = () => {
     navigate("/host/properties-type");
   };
@@ -60,8 +147,56 @@ const HostDashboard = () => {
     // Tìm property cần sửa
     const propertyToEdit = properties.find((p) => p.id === propertyId);
     if (propertyToEdit) {
-      setEditingProperty({ ...propertyToEdit });
+      // Khởi tạo các state cho địa chỉ
+      setSelectedCountry(propertyToEdit.country || "Vietnam");
+
+      // Set up property object with empty values for new fields if they don't exist
+      const enhancedProperty = {
+        ...propertyToEdit,
+        extra_images: propertyToEdit.extra_images || [],
+        amenities: propertyToEdit.amenities || [],
+      };
+
+      setEditingProperty(enhancedProperty);
       setIsEditModalOpen(true);
+
+      // Nếu đã có dữ liệu địa điểm, cần tìm code tương ứng để hiển thị đúng
+      if (propertyToEdit.country === "Vietnam") {
+        // Chúng ta sẽ cập nhật selectedProvince, selectedDistrict, selectedWard sau khi có dữ liệu provinces
+        setTimeout(() => {
+          if (provinces.length > 0 && propertyToEdit.province) {
+            const provinceObj = provinces.find(
+              (p) => p.name === propertyToEdit.province,
+            );
+            if (provinceObj) {
+              setSelectedProvince(String(provinceObj.code));
+
+              // Tương tự với district và ward, cần đợi dữ liệu được load
+              setTimeout(() => {
+                if (districts.length > 0 && propertyToEdit.district) {
+                  const districtObj = districts.find(
+                    (d) => d.name === propertyToEdit.district,
+                  );
+                  if (districtObj) {
+                    setSelectedDistrict(String(districtObj.code));
+
+                    setTimeout(() => {
+                      if (wards.length > 0 && propertyToEdit.ward) {
+                        const wardObj = wards.find(
+                          (w) => w.name === propertyToEdit.ward,
+                        );
+                        if (wardObj) {
+                          setSelectedWard(String(wardObj.code));
+                        }
+                      }
+                    }, 300);
+                  }
+                }
+              }, 300);
+            }
+          }
+        }, 300);
+      }
     }
   };
 
@@ -70,6 +205,10 @@ const HostDashboard = () => {
     setIsEditModalOpen(false);
     setEditingProperty(null);
     setFormErrors({});
+    setSelectedCountry("Vietnam");
+    setSelectedProvince("");
+    setSelectedDistrict("");
+    setSelectedWard("");
   };
 
   // Xử lý thay đổi trường input trong form
@@ -79,6 +218,65 @@ const HostDashboard = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+  };
+
+  // Khi chọn quốc gia
+  const handleCountryChange = (e) => {
+    const value = e.target.value;
+    setSelectedCountry(value);
+    setSelectedProvince("");
+    setSelectedDistrict("");
+    setSelectedWard("");
+    setEditingProperty((p) => ({
+      ...p,
+      country: value,
+      province: "",
+      district: "",
+      ward: "",
+    }));
+  };
+
+  // Khi chọn tỉnh/thành
+  const handleProvinceChange = (e) => {
+    const value = e.target.value;
+    setSelectedProvince(value);
+    setSelectedDistrict("");
+    setSelectedWard("");
+    setEditingProperty((p) => ({
+      ...p,
+      province: value,
+      district: "",
+      ward: "",
+    }));
+  };
+
+  // Khi chọn quận/huyện
+  const handleDistrictChange = (e) => {
+    const value = e.target.value;
+    setSelectedDistrict(value);
+    setSelectedWard("");
+    setEditingProperty((p) => ({ ...p, district: value, ward: "" }));
+  };
+
+  // Khi chọn phường/xã
+  const handleWardChange = (e) => {
+    const value = e.target.value;
+    setSelectedWard(value);
+    setEditingProperty((p) => ({ ...p, ward: value }));
+  };
+
+  // Chọn tiện nghi
+  const handleAmenityChange = (id) => {
+    setEditingProperty((prev) => {
+      const amenities_id = prev.amenities || [];
+      const exists = amenities_id.includes(id);
+      return {
+        ...prev,
+        amenities: exists
+          ? amenities_id.filter((a) => a !== id)
+          : [...amenities_id, id],
+      };
+    });
   };
 
   // Kiểm tra form có hợp lệ không
@@ -97,6 +295,25 @@ const HostDashboard = () => {
       errors.description = "Mô tả không được để trống";
     }
 
+    if (selectedCountry === "Vietnam") {
+      if (!selectedProvince) {
+        errors.province = "Vui lòng chọn tỉnh/thành phố";
+      }
+      if (!selectedDistrict) {
+        errors.district = "Vui lòng chọn quận/huyện";
+      }
+      if (!selectedWard) {
+        errors.ward = "Vui lòng chọn phường/xã";
+      }
+    } else {
+      if (!editingProperty.province) {
+        errors.province = "Vui lòng nhập tỉnh/thành phố";
+      }
+      if (!editingProperty.district) {
+        errors.district = "Vui lòng nhập quận/huyện";
+      }
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -107,16 +324,96 @@ const HostDashboard = () => {
 
     try {
       setIsSaving(true);
+      const formData = new FormData();
+
+      // Lấy tên province, district, ward từ code nếu là Vietnam
+      let provinceName = editingProperty.province;
+      let districtName = editingProperty.district;
+      let wardName = editingProperty.ward;
+      let cityName = editingProperty.city || "";
+
+      if (selectedCountry === "Vietnam") {
+        const foundProvince = provinces.find(
+          (p) => String(p.code) === String(selectedProvince),
+        );
+        provinceName = foundProvince
+          ? foundProvince.name
+          : editingProperty.province;
+
+        // Nếu là thành phố trực thuộc trung ương thì city = province
+        cityName =
+          foundProvince && foundProvince.name.includes("Thành phố")
+            ? foundProvince.name
+            : "";
+
+        const foundDistrict = districts.find(
+          (d) => String(d.code) === String(selectedDistrict),
+        );
+        districtName = foundDistrict
+          ? foundDistrict.name
+          : editingProperty.district;
+
+        const foundWard = wards.find(
+          (w) => String(w.code) === String(selectedWard),
+        );
+        wardName = foundWard ? foundWard.name : editingProperty.ward;
+      }
+
+      // Tạo object request
+      const requestObj = {
+        name: editingProperty.name,
+        description: editingProperty.description,
+        address: editingProperty.address,
+        ward: wardName,
+        district: districtName,
+        city: cityName,
+        province: provinceName,
+        country: selectedCountry,
+        status: editingProperty.status,
+        check_in_time: editingProperty.check_in_time,
+        check_out_time: editingProperty.check_out_time,
+        amenities_id: editingProperty.amenities || [],
+        extra_images: editingProperty.extra_images || [],
+      };
+
+      console.log("Request object:", requestObj);
+
+      formData.append(
+        "request",
+        new Blob([JSON.stringify(requestObj)], { type: "application/json" }),
+      );
+      console.log("Main image base64:", editingProperty.image);
+      // Thêm file ảnh đại diện
+      if (editingProperty.imageFile) {
+        formData.append("image", editingProperty.imageFile);
+        console.log("Adding main image file:", editingProperty.imageFile);
+        console.log("Main image base64:", editingProperty.image);
+      }
+
+      // Thêm các file ảnh bổ sung
+
+      if (
+        editingProperty.extraImageFiles &&
+        editingProperty.extraImageFiles.length > 0
+      ) {
+        for (let file of editingProperty.extraImageFiles) {
+          formData.append("extra_image", file);
+          console.log("Adding extra image file:", file);
+          console.log("Extra image base64:", editingProperty.extra_images);
+        }
+      }
 
       const response = await hostAxios.put(
         `/properties/${editingProperty.id}`,
-        editingProperty,
+        formData,
       );
 
       if (response.data) {
         // Cập nhật lại danh sách properties
+        const updatedProperty = response.data.data || editingProperty;
+        console.log("Updated property:", updatedProperty);
         setProperties((prev) =>
-          prev.map((p) => (p.id === editingProperty.id ? editingProperty : p)),
+          prev.map((p) => (p.id === editingProperty.id ? updatedProperty : p)),
         );
 
         // Đóng modal
@@ -128,32 +425,6 @@ const HostDashboard = () => {
       alert("Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại sau.");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  // Toggle trạng thái property
-  const handleToggleStatus = async (e, propertyId) => {
-    e.stopPropagation(); // Ngăn chặn sự kiện click lan tỏa
-
-    try {
-      const propertyToUpdate = properties.find((p) => p.id === propertyId);
-      if (!propertyToUpdate) return;
-
-      const response = await hostAxios.put(`/properties/${propertyId}/status`, {
-        status: !propertyToUpdate.status,
-      });
-
-      if (response.data) {
-        // Cập nhật lại danh sách properties
-        setProperties((prev) =>
-          prev.map((p) =>
-            p.id === propertyId ? { ...p, status: !p.status } : p,
-          ),
-        );
-      }
-    } catch (error) {
-      console.error("Error toggling property status:", error);
-      alert("Đã xảy ra lỗi khi cập nhật trạng thái. Vui lòng thử lại.");
     }
   };
 
@@ -189,9 +460,12 @@ const HostDashboard = () => {
         <h1 className="text-3xl font-bold text-gray-800">Quản lý chỗ nghỉ</h1>
         <button
           onClick={handleAddProperty}
-          className="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
+          className="flex cursor-pointer items-center rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
         >
-          + Thêm chỗ nghỉ mới
+          <span>
+            <GoPlus size={20} />
+          </span>
+          <span>Thêm chỗ nghỉ mới</span>
         </button>
       </div>
 
@@ -232,14 +506,11 @@ const HostDashboard = () => {
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                   />
                   {/* Overlay cho status - làm nó có thể click để toggle status */}
-                  <div
-                    className="absolute top-4 right-4 cursor-pointer"
-                    onClick={(e) => handleToggleStatus(e, property.id)}
-                  >
+                  <div className="absolute top-4 right-4 cursor-pointer">
                     <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium text-white ${
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium text-white duration-200 ${
                         property.status
-                          ? "bg-green-500 hover:bg-green-600"
+                          ? "bg-secondary hover:bg-primary"
                           : "bg-gray-500 hover:bg-gray-600"
                       }`}
                     >
@@ -319,12 +590,12 @@ const HostDashboard = () => {
           <div className="flex min-h-screen items-center justify-center p-4">
             {/* Backdrop */}
             <div
-              className="bg-opacity-50 fixed inset-0 bg-black transition-opacity"
+              className="fixed inset-0 cursor-pointer bg-black/50 transition-opacity"
               onClick={handleCloseEditModal}
             ></div>
 
             {/* Modal content */}
-            <div className="relative w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl sm:p-8">
+            <div className="relative w-full max-w-4xl rounded-lg bg-white p-6 shadow-xl sm:p-8">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-800">
                   Chỉnh sửa chỗ nghỉ
@@ -365,106 +636,206 @@ const HostDashboard = () => {
                   </div>
 
                   {/* Địa chỉ */}
-                  <div>
-                    <label
-                      htmlFor="address"
-                      className="mb-1 block text-sm font-medium text-gray-700"
-                    >
-                      Địa chỉ <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="address"
-                      name="address"
-                      value={editingProperty.address}
-                      onChange={handleInputChange}
-                      className={`block w-full rounded-md border ${formErrors.address ? "border-red-500" : "border-gray-300"} p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500`}
-                    />
-                    {formErrors.address && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {formErrors.address}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Thông tin địa chỉ chi tiết */}
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {/* Quốc gia */}
+                    <div>
+                      <label
+                        htmlFor="country"
+                        className="mb-1 block text-sm font-medium text-gray-700"
+                      >
+                        Quốc gia <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        className="block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        value={selectedCountry}
+                        onChange={handleCountryChange}
+                        required
+                      >
+                        {countries.map((c) => (
+                          <option key={c.code} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Tỉnh/Thành */}
+                    <div>
+                      <label
+                        htmlFor="province"
+                        className="mb-1 block text-sm font-medium text-gray-700"
+                      >
+                        Tỉnh/Thành <span className="text-red-500">*</span>
+                      </label>
+                      {selectedCountry === "Vietnam" ? (
+                        <select
+                          className={`block w-full rounded-md border ${formErrors.province ? "border-red-500" : "border-gray-300"} p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500`}
+                          value={selectedProvince}
+                          onChange={handleProvinceChange}
+                          required
+                        >
+                          <option value="">Chọn tỉnh/thành</option>
+                          {provinces.map((p) => (
+                            <option key={p.code} value={p.code}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          name="province"
+                          value={editingProperty.province || ""}
+                          onChange={handleInputChange}
+                          className={`block w-full rounded-md border ${formErrors.province ? "border-red-500" : "border-gray-300"} p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500`}
+                          placeholder="Nhập tỉnh/thành"
+                        />
+                      )}
+                      {formErrors.province && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {formErrors.province}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Quận/Huyện */}
+                    <div>
+                      <label
+                        htmlFor="district"
+                        className="mb-1 block text-sm font-medium text-gray-700"
+                      >
+                        Quận/Huyện <span className="text-red-500">*</span>
+                      </label>
+                      {selectedCountry === "Vietnam" ? (
+                        <select
+                          className={`block w-full rounded-md border ${formErrors.district ? "border-red-500" : "border-gray-300"} p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500`}
+                          value={selectedDistrict}
+                          onChange={handleDistrictChange}
+                          required
+                          disabled={!selectedProvince}
+                        >
+                          <option value="">Chọn quận/huyện</option>
+                          {districts.map((d) => (
+                            <option key={d.code} value={d.code}>
+                              {d.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          name="district"
+                          value={editingProperty.district || ""}
+                          onChange={handleInputChange}
+                          className={`block w-full rounded-md border ${formErrors.district ? "border-red-500" : "border-gray-300"} p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500`}
+                          placeholder="Nhập quận/huyện"
+                        />
+                      )}
+                      {formErrors.district && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {formErrors.district}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Phường/Xã */}
                     <div>
                       <label
                         htmlFor="ward"
                         className="mb-1 block text-sm font-medium text-gray-700"
                       >
                         Phường/Xã
+                        {selectedCountry === "Vietnam" && (
+                          <span className="text-red-500">*</span>
+                        )}
+                      </label>
+                      {selectedCountry === "Vietnam" ? (
+                        <select
+                          className={`block w-full rounded-md border ${formErrors.ward ? "border-red-500" : "border-gray-300"} p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500`}
+                          value={selectedWard}
+                          onChange={handleWardChange}
+                          required={selectedCountry === "Vietnam"}
+                          disabled={!selectedDistrict}
+                        >
+                          <option value="">Chọn phường/xã</option>
+                          {wards.map((w) => (
+                            <option key={w.code} value={w.code}>
+                              {w.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          name="ward"
+                          value={editingProperty.ward || ""}
+                          onChange={handleInputChange}
+                          className={`block w-full rounded-md border ${formErrors.ward ? "border-red-500" : "border-gray-300"} p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500`}
+                          placeholder="Nhập phường/xã"
+                        />
+                      )}
+                      {formErrors.ward && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {formErrors.ward}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Địa chỉ (số nhà, tên đường...) */}
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor="address"
+                        className="mb-1 block text-sm font-medium text-gray-700"
+                      >
+                        Địa chỉ (số nhà, tên đường...){" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        id="ward"
-                        name="ward"
-                        value={editingProperty.ward || ""}
+                        id="address"
+                        name="address"
+                        value={editingProperty.address || ""}
+                        onChange={handleInputChange}
+                        className={`block w-full rounded-md border ${formErrors.address ? "border-red-500" : "border-gray-300"} p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500`}
+                      />
+                      {formErrors.address && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {formErrors.address}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Giờ nhận - trả phòng */}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label
+                        htmlFor="check_in_time"
+                        className="mb-1 block text-sm font-medium text-gray-700"
+                      >
+                        Giờ nhận phòng
+                      </label>
+                      <input
+                        type="time"
+                        id="check_in_time"
+                        name="check_in_time"
+                        value={editingProperty.check_in_time || "14:00"}
                         onChange={handleInputChange}
                         className="block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>
                     <div>
                       <label
-                        htmlFor="district"
+                        htmlFor="check_out_time"
                         className="mb-1 block text-sm font-medium text-gray-700"
                       >
-                        Quận/Huyện
+                        Giờ trả phòng
                       </label>
                       <input
-                        type="text"
-                        id="district"
-                        name="district"
-                        value={editingProperty.district || ""}
-                        onChange={handleInputChange}
-                        className="block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="city"
-                        className="mb-1 block text-sm font-medium text-gray-700"
-                      >
-                        Thành phố
-                      </label>
-                      <input
-                        type="text"
-                        id="city"
-                        name="city"
-                        value={editingProperty.city || ""}
-                        onChange={handleInputChange}
-                        className="block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="province"
-                        className="mb-1 block text-sm font-medium text-gray-700"
-                      >
-                        Tỉnh
-                      </label>
-                      <input
-                        type="text"
-                        id="province"
-                        name="province"
-                        value={editingProperty.province || ""}
-                        onChange={handleInputChange}
-                        className="block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="country"
-                        className="mb-1 block text-sm font-medium text-gray-700"
-                      >
-                        Quốc gia
-                      </label>
-                      <input
-                        type="text"
-                        id="country"
-                        name="country"
-                        value={editingProperty.country || ""}
+                        type="time"
+                        id="check_out_time"
+                        name="check_out_time"
+                        value={editingProperty.check_out_time || "12:00"}
                         onChange={handleInputChange}
                         className="block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       />
@@ -479,19 +850,180 @@ const HostDashboard = () => {
                     >
                       Mô tả <span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      rows="4"
+                    <ReactQuill
+                      theme="snow"
                       value={editingProperty.description}
-                      onChange={handleInputChange}
-                      className={`block w-full rounded-md border ${formErrors.description ? "border-red-500" : "border-gray-300"} p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500`}
-                    ></textarea>
+                      onChange={(value) =>
+                        setEditingProperty((prev) => ({
+                          ...prev,
+                          description: value,
+                        }))
+                      }
+                      style={{ background: "white" }}
+                    />
                     {formErrors.description && (
                       <p className="mt-1 text-sm text-red-500">
                         {formErrors.description}
                       </p>
                     )}
+                  </div>
+
+                  {/* Tiện nghi */}
+                  {amenities.length > 0 && (
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">
+                        Tiện nghi
+                      </label>
+                      <div className="flex flex-wrap gap-4">
+                        {amenities.map((a) => (
+                          <label key={a.id} className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={editingProperty.amenities?.includes(
+                                a.id,
+                              )}
+                              onChange={() => handleAmenityChange(a.id)}
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span
+                              dangerouslySetInnerHTML={{ __html: a.icon }}
+                            />
+                            {a.name}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Ảnh đại diện */}
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      Ảnh đại diện
+                    </label>
+                    <div className="mt-1 flex items-center space-x-6">
+                      <div className="flex-shrink-0">
+                        {editingProperty.image && (
+                          <img
+                            src={editingProperty.image}
+                            alt="Ảnh đại diện"
+                            className="h-24 w-24 rounded-md object-cover"
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 px-6 py-4 transition hover:bg-blue-100">
+                          <svg
+                            className="mb-2 h-6 w-6 text-blue-400"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                          <span className="text-sm text-blue-700">
+                            Thay đổi ảnh đại diện
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const base64 = await getBase64(file);
+                                setEditingProperty((p) => ({
+                                  ...p,
+                                  image: base64,
+                                  imageFile: file,
+                                }));
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ảnh bổ sung */}
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      Ảnh bổ sung (có thể chọn nhiều ảnh)
+                    </label>
+                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 px-6 py-4 transition hover:bg-blue-100">
+                      <svg
+                        className="mb-2 h-8 w-8 text-blue-400"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      <span className="text-sm text-blue-700">
+                        Chọn ảnh bổ sung
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={async (e) => {
+                          const files = Array.from(e.target.files);
+                          const base64Arr = await Promise.all(
+                            files.map(getBase64),
+                          );
+                          setEditingProperty((p) => ({
+                            ...p,
+                            extra_images: [
+                              ...(p.extra_images || []),
+                              ...base64Arr,
+                            ],
+                            extraImageFiles: [
+                              ...(p.extraImageFiles || []),
+                              ...files,
+                            ], // Lưu file gốc để gửi lên server
+                          }));
+                        }}
+                      />
+                    </label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {editingProperty.extra_images &&
+                        editingProperty.extra_images.map((img, idx) => (
+                          <div key={idx} className="relative">
+                            <img
+                              src={img}
+                              alt={`extra-${idx}`}
+                              className="h-24 w-24 rounded-lg object-cover shadow"
+                            />
+                            <button
+                              type="button"
+                              className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white shadow-md hover:bg-red-600"
+                              onClick={() => {
+                                setEditingProperty((prev) => ({
+                                  ...prev,
+                                  extra_images: prev.extra_images.filter(
+                                    (_, i) => i !== idx,
+                                  ),
+                                  extraImageFiles: prev.extraImageFiles?.filter(
+                                    (_, i) => i !== idx,
+                                  ),
+                                }));
+                              }}
+                            >
+                              <FaTimes size={12} />
+                            </button>
+                          </div>
+                        ))}
+                    </div>
                   </div>
 
                   {/* Trạng thái */}
@@ -511,22 +1043,6 @@ const HostDashboard = () => {
                       Đang hoạt động
                     </label>
                   </div>
-
-                  {/* Hình ảnh hiện tại */}
-                  {editingProperty.image && (
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-gray-700">
-                        Ảnh hiện tại
-                      </label>
-                      <div className="mt-1 flex justify-center">
-                        <img
-                          src={editingProperty.image}
-                          alt={editingProperty.name}
-                          className="h-40 w-auto rounded-md object-cover"
-                        />
-                      </div>
-                    </div>
-                  )}
                 </form>
               </div>
 

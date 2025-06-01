@@ -21,4 +21,5 @@ export const PAGE_TITLES = {
   PERSONAL: "Thông tin cá nhân",
   NOT_FOUND: "Trang không tìm thấy",
   BOOKING_CONFIRMATION: "Xác nhận đặt phòng",
+  DASHBOARD_HOST: "DASHBOARD - Quản lý chỗ ở",
 };

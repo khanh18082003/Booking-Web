@@ -416,11 +416,11 @@ const OverviewContent = ({ hotelData, reviewsData }) => {
               <h3 className="mb-2 text-lg font-bold">
                 Các tiện nghi được ưa chuộng nhất
               </h3>
-              <ul className="flex gap-2.5 pl-5">
+              <ul className="flex flex-wrap gap-2.5 pl-5">
                 {hotelData.amenities.map((amenity, index) => (
                   <li
                     key={index}
-                    className="m-1 flex min-w-[13%] items-center justify-start gap-2 rounded-[10px] border-1 border-gray-300 p-2 text-sm leading-11"
+                    className="m-1 flex min-w-[13%] items-center justify-start gap-2 rounded-[10px] border-1 border-gray-300 px-4 py-2 text-sm leading-11"
                   >
                     <div
                       dangerouslySetInnerHTML={{

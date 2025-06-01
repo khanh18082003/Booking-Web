@@ -30,7 +30,12 @@ const Personal = () => {
     gender: null,
     nationality: null,
   });
+  const [searchCountry, setSearchCountry] = useState("");
 
+  const handleSearchCountry = (e) => {
+    setSearchCountry(e.target.value);
+    console.log("Searching for country:", searchCountry);
+  };
   // Set page title
   useEffect(() => {
     setPageTitle(PAGE_TITLES.PERSONAL);
@@ -142,6 +147,9 @@ const Personal = () => {
   // Save changes for the current editing section
   const handleSaveChanges = async () => {
     try {
+      if (!store.userProfile) {
+        return;
+      }
       // Different API call based on which section is being edited
       let endpoint = "/profile";
       let data = {};
@@ -157,7 +165,8 @@ const Personal = () => {
         // Email is usually not editable directly - would require verification
         case 2: // Phone number
           data = {
-            phone_number: `${selectedCountry.dialCode}${formValues.phone}`,
+            country_code: selectedCountry.dialCode,
+            phone_number: formValues.phone,
           };
           break;
         case 3: // Date of birth
@@ -310,11 +319,15 @@ const Personal = () => {
   };
 
   const handleSaveAvatar = async (file, previewUrl) => {
+    if (!store.userProfile) {
+      console.error("User profile not found");
+      return;
+    }
     try {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      const response = await axios.post("/users/update-avatar", formData, {
+      const response = await axios.patch("/profile/avatar", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -339,8 +352,12 @@ const Personal = () => {
   };
 
   const handleDeleteAvatar = async () => {
+    if (!store.userProfile) {
+      console.error("User profile not found");
+      return;
+    }
     try {
-      const response = await axios.delete("/users/delete-avatar");
+      const response = await axios.delete("/profile/avatar");
 
       if (response.data.code === "M000") {
         setStore((prevStore) => ({
@@ -509,31 +526,54 @@ const Personal = () => {
                                             type="text"
                                             placeholder="Tìm quốc gia..."
                                             className="w-full rounded border border-gray-300 px-3 py-1 text-sm"
-                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={handleSearchCountry}
                                           />
                                         </div>
                                         <ul className="max-h-48 overflow-y-auto">
-                                          {countries.map((country) => (
-                                            <li
-                                              key={country.code}
-                                              className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-gray-100"
-                                              onClick={() =>
-                                                handleSelectCountry(country)
-                                              }
-                                            >
-                                              <div className="flex items-center space-x-2">
-                                                <img
-                                                  src={country.flag}
-                                                  alt={`${country.name} Flag`}
-                                                  className="h-5 w-5 rounded-full"
-                                                />
-                                                <span>{country.name}</span>
-                                              </div>
-                                              <span className="text-gray-500">
-                                                {country.dialCode}
-                                              </span>
-                                            </li>
-                                          ))}
+                                          {countries
+                                            .filter((country) => {
+                                              const searchTerm =
+                                                searchCountry.toLowerCase();
+                                              return (
+                                                country.name
+                                                  .toLowerCase()
+                                                  .includes(searchTerm) ||
+                                                country.dialCode
+                                                  .toLowerCase()
+                                                  .includes(searchTerm)
+                                              );
+                                            })
+                                            .map((country) => {
+                                              const dialCodes =
+                                                country.dialCode.split(", ");
+                                              return dialCodes.map(
+                                                (dialCode, index) => (
+                                                  <li
+                                                    key={index}
+                                                    className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-gray-100"
+                                                    onClick={() =>
+                                                      handleSelectCountry(
+                                                        country,
+                                                      )
+                                                    }
+                                                  >
+                                                    <div className="flex items-center space-x-2">
+                                                      <img
+                                                        src={country.flag}
+                                                        alt={`${country.name} Flag`}
+                                                        className="h-5 w-5 rounded-full"
+                                                      />
+                                                      <span>
+                                                        {country.name}
+                                                      </span>
+                                                    </div>
+                                                    <span className="text-gray-500">
+                                                      {dialCode.trim()}
+                                                    </span>
+                                                  </li>
+                                                ),
+                                              );
+                                            })}
                                         </ul>
                                       </div>
                                     )}

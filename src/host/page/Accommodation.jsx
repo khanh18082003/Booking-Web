@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { GoPlus } from "react-icons/go";
 import hostAxios from "../../utils/hostAxiosCustomize";
 import { useStore } from "../../utils/AuthProvider";
 import {
@@ -13,7 +14,10 @@ import {
   FaTimes,
   FaSave,
   FaTrash,
+  FaCalendarAlt,
+  FaEdit,
 } from "react-icons/fa";
+import PriceCalendar from "../../components/DetailRoom/PriceCalendar";
 
 // Tạo component chọn giường ngủ
 const BedTypeSelector = ({ bedTypes, value, onChange, onRemove, index }) => {
@@ -208,9 +212,14 @@ const Accommodation = () => {
   const [extraImagePreviews, setExtraImagePreviews] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
 
+  // State cho modal cài đặt giá
+  const [isPriceCalendarOpen, setIsPriceCalendarOpen] = useState(false);
+  const [selectedAccommodation, setSelectedAccommodation] = useState(null);
+
   // Fetch danh sách accommodation
   useEffect(() => {
     const fetchAccommodations = async () => {
+      if (!store.hostProfile) return;
       try {
         setLoading(true);
         const response = await hostAxios.get(
@@ -219,7 +228,7 @@ const Accommodation = () => {
 
         if (response.data && response.data.data) {
           setAccommodations(response.data.data);
-
+          console.log("Accommodations:", response.data.data);
           // Lấy tên property nếu có trong response
           if (response.data.property_name) {
             setPropertyName(response.data.property_name);
@@ -251,9 +260,12 @@ const Accommodation = () => {
   // Fetch danh sách tiện nghi
   useEffect(() => {
     const fetchAmenities = async () => {
+      if (!store.hostProfile) {
+        return;
+      }
       try {
         const res = await hostAxios.get("/amenities");
-        console.log("Amenities response:", res.data);
+
         if (res.data && res.data.data) {
           // Lọc chỉ lấy tiện nghi cho accommodation
           const accommodationAmenities = res.data.data.data.filter(
@@ -266,7 +278,7 @@ const Accommodation = () => {
       }
     };
     fetchAmenities();
-  }, []);
+  }, [store.hostProfile]);
 
   // Hàm toggle mở/đóng chi tiết
   const toggleDetails = (id) => {
@@ -450,9 +462,21 @@ const Accommodation = () => {
       const response = await hostAxios.post("/accommodations", formData);
 
       if (response.data) {
-        // Thêm accommodation mới vào danh sách
+        // Thêm accommodation mới vào danh sách với định dạng dữ liệu phù hợp với hiển thị
         const newData = response.data.data;
-        setAccommodations((prev) => [...prev, newData]);
+
+        // Tạo đối tượng accommodation mới có cấu trúc giống với dữ liệu từ API fetch
+        const formattedNewData = {
+          ...newData,
+          // Đảm bảo tên thuộc tính phù hợp với hiển thị
+          basePrice: newData.base_price || newData.basePrice,
+          totalRooms: newData.total_rooms || newData.totalRooms,
+          totalUnits: newData.total_units || newData.totalUnits,
+          // Đảm bảo URL hình ảnh đúng định dạng
+          extra_images: newData.extra_images || [],
+        };
+
+        setAccommodations((prev) => [...prev, formattedNewData]);
 
         // Đóng modal
         setIsAddModalOpen(false);
@@ -463,6 +487,32 @@ const Accommodation = () => {
       alert("Đã xảy ra lỗi khi thêm loại phòng!");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Mở modal chỉnh sửa giá theo ngày
+  const openPriceCalendar = (accommodation) => {
+    setSelectedAccommodation(accommodation);
+    setIsPriceCalendarOpen(true);
+  };
+
+  // Xử lý lưu giá mới
+  const handleSavePrices = async (dailyPrices) => {
+    if (!selectedAccommodation) return;
+
+    try {
+      // Trong triển khai thực tế, gọi API để lưu giá theo ngày
+      console.log("Saving prices for accommodation:", selectedAccommodation.id);
+      console.log("Daily prices:", dailyPrices);
+
+      // Giả lập API call thành công
+      alert("Đã lưu giá phòng thành công!");
+
+      // Đóng modal sau khi lưu
+      setIsPriceCalendarOpen(false);
+    } catch (error) {
+      console.error("Error saving prices:", error);
+      alert("Đã xảy ra lỗi khi lưu giá phòng!");
     }
   };
 
@@ -496,32 +546,32 @@ const Accommodation = () => {
   return (
     <div className="container mx-auto p-6">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <button
-              onClick={() => window.history.back()}
-              className="mr-4 rounded-full p-2 text-gray-600 hover:bg-gray-100"
-            >
-              <FaChevronLeft />
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">
-                Danh sách loại phòng
-              </h1>
-              {propertyName && (
-                <p className="mt-1 text-gray-600">{propertyName}</p>
-              )}
-            </div>
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex items-center">
+          <button
+            onClick={() => window.history.back()}
+            className="mr-4 cursor-pointer rounded-full p-3 text-gray-600 duration-200 hover:bg-white/70"
+          >
+            <FaChevronLeft />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">
+              Danh sách loại phòng
+            </h1>
+            {propertyName && (
+              <p className="mt-1 text-gray-600">{propertyName}</p>
+            )}
           </div>
-
-          {/* Nút thêm mới */}
+        </div>
+        <div className="">
           <button
             onClick={openAddModal}
-            className="flex items-center rounded-md bg-blue-600 px-4 py-2 font-medium text-white shadow hover:bg-blue-700"
+            className="flex cursor-pointer items-center rounded-lg bg-secondary px-3 py-3 font-medium text-white transition hover:bg-primary"
           >
-            <FaPlus className="mr-2" />
-            Thêm loại phòng mới
+            <span>
+              <GoPlus size={20} />
+            </span>
+            <span className="text-sm">Thêm loại phòng mới</span>
           </button>
         </div>
       </div>
@@ -705,8 +755,14 @@ const Accommodation = () => {
 
                   {/* Footer với các nút hành động */}
                   <div className="mt-6 flex justify-end space-x-3 border-t border-gray-100 pt-4">
+                    <button
+                      onClick={() => openPriceCalendar(accommodation)}
+                      className="flex items-center rounded-md border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                    >
+                      <FaCalendarAlt className="mr-2" /> Chỉnh sửa giá theo ngày
+                    </button>
                     <button className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                      Chỉnh sửa
+                      <FaEdit className="mr-2 inline" /> Chỉnh sửa
                     </button>
                     <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
                       Quản lý đặt phòng
@@ -1026,6 +1082,20 @@ const Accommodation = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal hiển thị lịch giá */}
+      {isPriceCalendarOpen && selectedAccommodation && (
+        <PriceCalendar
+          accommodationId={selectedAccommodation.id}
+          basePrice={
+            selectedAccommodation.basePrice ||
+            selectedAccommodation.base_price ||
+            0
+          }
+          onClose={() => setIsPriceCalendarOpen(false)}
+          onSave={handleSavePrices}
+        />
       )}
     </div>
   );
