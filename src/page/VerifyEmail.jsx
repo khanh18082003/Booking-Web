@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import axios from "../utils/axiosCustomize";
+import axios from "../configuration/axiosCustomize";
 import { useStore } from "../utils/AuthProvider";
 import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 

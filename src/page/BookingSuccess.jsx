@@ -13,7 +13,7 @@ import {
 import { MdEmail, MdLocationOn, MdPayment, MdPrint } from "react-icons/md";
 import { setPageTitle } from "../utils/pageTitle";
 import { formatDate, getNights } from "../utils/utility";
-import axios from "../utils/axiosCustomize";
+import axios from "../configuration/axiosCustomize";
 
 const BookingSuccess = () => {
   const location = useLocation();

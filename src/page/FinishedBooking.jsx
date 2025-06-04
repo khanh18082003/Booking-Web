@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router";
 import { useState, useEffect, useCallback } from "react";
 import { setPageTitle } from "../utils/pageTitle";
 import { formatDate, getNights } from "../utils/utility";
-import axios from "../utils/axiosCustomize";
+import axios from "../configuration/axiosCustomize";
 import { useStore } from "../utils/AuthProvider";
 import { FaLock } from "react-icons/fa6";
 import {

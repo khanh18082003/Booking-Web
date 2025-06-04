@@ -8,7 +8,7 @@ import PropertiesFilter from "../components/PropertiesList/PropertiesFilter";
 import PropertiesMap from "../components/PropertiesList/PropertiesMap";
 import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 import { useLocation } from "react-router-dom";
-import axiosInstance from "../utils/axiosCustomize";
+import axiosInstance from "../configuration/axiosCustomize";
 
 const Properties = () => {
   const location = useLocation();

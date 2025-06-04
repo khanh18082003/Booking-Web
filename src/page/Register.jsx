@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router";
 import { useState, useEffect } from "react";
-import axios from "../utils/axiosCustomize"; // Import axios
+import axios from "../configuration/axiosCustomize"; // Import axios
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";

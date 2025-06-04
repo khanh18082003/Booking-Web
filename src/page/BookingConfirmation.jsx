@@ -7,7 +7,7 @@ import { useStore } from "../utils/AuthProvider";
 import countries from "../utils/countries";
 import HeaderProgress from "../components/Booking/HeaderProgress";
 import LeftBooking from "../components/Booking/LeftBooking";
-import axios from "../utils/axiosCustomize";
+import axios from "../configuration/axiosCustomize";
 
 const BookingConfirmation = () => {
   const navigate = useNavigate();

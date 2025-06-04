@@ -1,7 +1,7 @@
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
-import hostAxios from "../../utils/hostAxiosCustomize";
+import hostAxios from "../../configuration/hostAxiosCustomize";
 import { useState, useEffect } from "react";
 import { BsEyeSlashFill } from "react-icons/bs";
 import { IoEyeSharp } from "react-icons/io5";

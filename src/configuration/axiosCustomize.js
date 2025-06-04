@@ -52,6 +52,7 @@ instance.interceptors.request.use(
       "/auth/login",
       "/auth/verify-email",
       "/auth/refresh-token",
+      "/auth/outbound/authentication",
       "/auth/logout",
       "/auth/check-exist-email",
       "/users/forgot-password",

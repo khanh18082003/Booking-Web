@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { GoPlus } from "react-icons/go";
-import hostAxios from "../../utils/hostAxiosCustomize";
+import hostAxios from "../../configuration/hostAxiosCustomize";
 import { useStore } from "../../utils/AuthProvider";
 import {
   FaAngleDown,

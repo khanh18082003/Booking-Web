@@ -1,13 +1,13 @@
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router";
-import axios from "../utils/axiosCustomize";
+import axios from "../configuration/axiosCustomize";
 import { useState, useEffect } from "react";
 import { BsEyeSlashFill } from "react-icons/bs";
 import { IoEyeSharp } from "react-icons/io5";
 import { useStore } from "../utils/AuthProvider";
 import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
-import { OAuthConfig } from "../utils/OAuthConfiguration";
+import { OAuthConfig } from "../configuration/OAuthConfiguration";
 
 const Login = () => {
   const navigate = useNavigate();

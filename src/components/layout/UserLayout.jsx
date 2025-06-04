@@ -11,7 +11,9 @@ import Account from "../Header/Account";
 import AccountOptional from "../Header/AccountOptional";
 import { useEffect, useState } from "react";
 import { useStore } from "../../utils/AuthProvider";
-import axios, { registerLoadingHandlers } from "../../utils/axiosCustomize";
+import axios, {
+  registerLoadingHandlers,
+} from "../../configuration/axiosCustomize";
 import ApiLoading from "../common/ApiLoading";
 
 const UserLayout = () => {

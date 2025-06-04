@@ -16,7 +16,7 @@ const Profile = () => {
     setPageTitle(PAGE_TITLES.PROFILE);
   }, []);
 
-  const { store, setStore } = useStore();
+  const { store } = useStore();
   const [isProfileFinishedVisible, setIsProfileFinishedVisible] =
     useState(true);
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight, FaSave, FaTimes } from "react-icons/fa";
-import hostAxios from "../../utils/hostAxiosCustomize";
+import hostAxios from "../../configuration/hostAxiosCustomize";
 
 // Tạo component chỉnh sửa giá theo ngày
 const PriceCalendar = ({ accommodationId, basePrice, onClose, onSave }) => {

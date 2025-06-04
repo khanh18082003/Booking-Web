@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import hostAxios from "../../utils/hostAxiosCustomize";
+import hostAxios from "../../configuration/hostAxiosCustomize";
 
 const HostRegister = () => {
   const navigate = useNavigate();
@@ -11,7 +11,6 @@ const HostRegister = () => {
     existingPassword: "",
   });
   const [step, setStep] = useState(1); // 1: nhập email, 2: xác thực hoặc đăng ký
-  const [isExistingUser, setIsExistingUser] = useState(false);
   const [checking, setChecking] = useState(false);
 
   const handleChange = (e) => {

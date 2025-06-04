@@ -1,6 +1,8 @@
 import { useState } from "react";
-import axios from "../utils/axiosCustomize"; // Import axios
+import axios from "../configuration/axiosCustomize"; // Import axios
 import { useNavigate, useLocation } from "react-router";
+import { IoEyeSharp } from "react-icons/io5";
+import { BsEyeSlashFill } from "react-icons/bs";
 
 const ResetPassword = () => {
   const { email } = useLocation().state || {};
@@ -44,6 +46,7 @@ const ResetPassword = () => {
         email,
         new_password: formData.newPassword,
       });
+      console.log("Response:", response.data);
 
       alert("Password has been reset successfully!");
       navigate("/login"); // ✅ Redirect on success

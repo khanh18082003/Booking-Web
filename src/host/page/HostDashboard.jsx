@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import hostAxios from "../../utils/hostAxiosCustomize";
+import hostAxios from "../../configuration/hostAxiosCustomize";
 import { useStore } from "../../utils/AuthProvider";
 import { FaEdit, FaEye, FaTimes, FaSave } from "react-icons/fa";
 import { GoPlus } from "react-icons/go";

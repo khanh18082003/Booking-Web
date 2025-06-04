@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router";
-import axiosInstance from "../../utils/axiosCustomize";
+import axiosInstance from "../../configuration/axiosCustomize";
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";

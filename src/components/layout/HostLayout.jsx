@@ -1,14 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { useStore } from "../../utils/AuthProvider";
-import { registerLoadingHandlers } from "../../utils/axiosCustomize";
+import { registerLoadingHandlers } from "../../configuration/axiosCustomize";
 import ApiLoading from "../common/ApiLoading";
 import Header from "./Header";
 import { Outlet, useNavigate } from "react-router";
 import Language from "../Header/Language";
 import Navigation from "../Header/Navigation";
 import Account from "../Header/Account";
-import hostAxios from "../../utils/hostAxiosCustomize";
-import Login from "../Header/Login";
+import hostAxios from "../../configuration/hostAxiosCustomize";
 
 const HostLayout = () => {
   const { store, setStore, startApiCall, finishApiCall } = useStore();

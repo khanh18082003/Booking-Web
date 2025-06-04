@@ -13,7 +13,7 @@ import { vi } from "date-fns/locale";
 import NumberOfPersonBox from "./NumerOfPersonBox";
 import { useNavigate, useLocation } from "react-router";
 import PropTypes from "prop-types";
-import axiosInstance from "../../utils/axiosCustomize";
+import axiosInstance from "../../configuration/axiosCustomize";
 
 // Local storage key for search parameters
 const SEARCH_PARAMS_KEY = "booking_search_params";

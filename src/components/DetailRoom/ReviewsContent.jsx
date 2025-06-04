@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import axios from "../../utils/axiosCustomize";
+import { useEffect, useState } from "react";
+import axios from "../../configuration/axiosCustomize";
 import { useParams } from "react-router-dom";
 import { useStore } from "../../utils/AuthProvider";
 import { useNavigate, useLocation } from "react-router-dom";

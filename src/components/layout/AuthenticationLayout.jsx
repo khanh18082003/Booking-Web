@@ -5,7 +5,7 @@ import Navigation from "../Header/Navigation";
 import Language from "../Header/Language";
 import { Outlet } from "react-router";
 import { useStore } from "../../utils/AuthProvider";
-import { registerLoadingHandlers } from "../../utils/axiosCustomize";
+import { registerLoadingHandlers } from "../../configuration/axiosCustomize";
 import ApiLoading from "../common/ApiLoading";
 
 const AuthenticationLayout = () => {

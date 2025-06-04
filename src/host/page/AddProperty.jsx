@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import hostAxios from "../../utils/hostAxiosCustomize";
-import axios from "axios";
+import hostAxios from "../../configuration/hostAxiosCustomize";
 import countries from "../../utils/countries";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
@@ -84,6 +83,7 @@ const AddProperty = () => {
           setAmenities(res.data.data.data); // data.data là mảng amenities
         }
       } catch (err) {
+        console.error("Error fetching amenities:", err);
         setAmenities([]);
       }
     };

@@ -9,7 +9,7 @@ import { useStore } from "../utils/AuthProvider";
 import defaultAvatar from "../assets/default-avatar.avif";
 import { IoCameraOutline } from "react-icons/io5";
 import ProfileAvatarModal from "../components/common/ProfileAvatarModal";
-import axios from "../utils/axiosCustomize";
+import axios from "../configuration/axiosCustomize";
 import { IoChevronDown } from "react-icons/io5";
 import countries from "../utils/countries";
 import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";

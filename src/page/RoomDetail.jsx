@@ -7,7 +7,7 @@ import NotesContent from "../components/DetailRoom/NotesContent";
 import ReviewsContent from "../components/DetailRoom/ReviewsContent";
 import Banner from "../components/layout/Banner";
 import { useParams, useNavigate, useLocation, Outlet } from "react-router-dom";
-import axios from "../utils/axiosCustomize";
+import axios from "../configuration/axiosCustomize";
 import { setPageTitle } from "../utils/pageTitle";
 
 const RoomDetail = () => {

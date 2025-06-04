@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import axios from "../../utils/axiosCustomize";
+import axios from "../../configuration/axiosCustomize";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { IoClose, IoHomeOutline, IoPersonSharp } from "react-icons/io5";
 import { resizeSvg } from "../../utils/convertIconToSVG";

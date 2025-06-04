@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../utils/AuthProvider";
-import axios from "../utils/axiosCustomize";
+import axios from "../configuration/axiosCustomize";
 import tripsGlobe from "../assets/TripsGlobe.png";
 import tripsEmptyScreenComplete from "../assets/TripsEmptyScreenComplete.png";
 import { formatDate } from "../utils/utility";

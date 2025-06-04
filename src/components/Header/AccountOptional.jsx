@@ -7,7 +7,7 @@ import { BiLogOutCircle } from "react-icons/bi";
 import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
 import defaultAvatar from "../../assets/default-avatar.avif"; // Import a default avatar image
-import axios from "../../utils/axiosCustomize";
+import axios from "../../configuration/axiosCustomize";
 import { useStore } from "../../utils/AuthProvider";
 import { RiLuggageDepositLine } from "react-icons/ri";
 
