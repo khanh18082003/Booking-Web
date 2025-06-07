@@ -390,4 +390,8 @@ const InfoPricingContent = ({ hotelData }) => {
   );
 };
 
+InfoPricingContent.propTypes = {
+  hotelData: PropTypes.object.isRequired,
+};
+
 export default InfoPricingContent;

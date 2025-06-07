@@ -39,9 +39,9 @@ const Login = () => {
   const handleLoginGoogle = () => {
     // Implement Google login logic here
     console.log("Google login clicked");
-    const callbackUrl = OAuthConfig.redirectUri;
-    const authUrl = OAuthConfig.authUri;
-    const googleClientId = OAuthConfig.clientId;
+    const callbackUrl = OAuthConfig.google.redirectUri;
+    const authUrl = OAuthConfig.google.authUri;
+    const googleClientId = OAuthConfig.google.clientId;
 
     const targetUrl = `${authUrl}?redirect_uri=${encodeURIComponent(
       callbackUrl,
@@ -49,6 +49,17 @@ const Login = () => {
 
     console.log(targetUrl);
 
+    window.location.href = targetUrl;
+  };
+
+  const handleLoginFacebook = () => {
+    const callbackUri = OAuthConfig.facebook.redirectUri;
+    const authUri = OAuthConfig.facebook.authUri;
+    const facebookClientId = OAuthConfig.facebook.clientId;
+    const targetUrl = `${authUri}?redirect_uri=${encodeURIComponent(
+      callbackUri,
+    )}&response_type=code&client_id=${facebookClientId}&scope=email%20public_profile`;
+    console.log(targetUrl);
     window.location.href = targetUrl;
   };
 
@@ -202,7 +213,10 @@ const Login = () => {
             <FcGoogle className="text-2xl" />
             <span className="font-medium text-gray-700">Google</span>
           </button>
-          <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2 shadow-sm transition hover:border-blue-500">
+          <button
+            onClick={handleLoginFacebook}
+            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2 shadow-sm transition hover:border-blue-500"
+          >
             <FaFacebook className="text-2xl text-[#1877F2]" />
             <span className="font-medium text-gray-700">Facebook</span>
           </button>
