@@ -10,7 +10,7 @@ const noLoadingEndpoints = [
   "/analytics", // Analytics endpoints
   "/health-check", // Health check endpoints
   "/locations", // Location search suggestions
-  "/payment/get-payment",
+  "/payments/get-payment",
 ];
 
 const noRefreshTokenEndpoints = [

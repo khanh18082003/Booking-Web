@@ -28,6 +28,7 @@ const Properties = () => {
 
   useEffect(() => {
     setPageTitle(PAGE_TITLES.PROPERTIES);
+    window.scrollTo(0, 0);
   }, []);
 
   const searchParams = new URLSearchParams(location.search);

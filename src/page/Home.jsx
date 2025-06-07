@@ -6,6 +6,7 @@ import { setPageTitle, PAGE_TITLES } from "../utils/pageTitle";
 const Home = () => {
   useEffect(() => {
     setPageTitle(PAGE_TITLES.HOME);
+    window.scrollTo(0, 0);
   }, []);
 
   return (

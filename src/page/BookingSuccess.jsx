@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import {
@@ -49,7 +49,8 @@ const BookingSuccess = () => {
     }
   };
 
-  const handleCallHistoricalTransaction = async () => {
+  // Đảm bảo handleCallHistoricalTransaction không thay đổi giữa các render
+  const handleCallHistoricalTransaction = useCallback(async () => {
     try {
       const response = await axios.get("payments/check-payment-status", {
         params: {
@@ -74,26 +75,26 @@ const BookingSuccess = () => {
         "Đã xảy ra lỗi khi kiểm tra trạng thái thanh toán. Vui lòng thử lại sau.",
       );
     }
-  };
+  }, [
+    bookingData.payment.id,
+    bookingData.total_price,
+    bookingData.payment.transaction_id,
+  ]);
 
   useEffect(() => {
     let intervalId;
-    // Only poll payment status if online payment and not yet paid
     if (isOnlinePayment && payment.status !== true) {
-      intervalId = setInterval(async () => {
-        await handleCallHistoricalTransaction();
-        // If status is updated to paid, stop polling
-        if (payment.status === true) {
-          window.scrollTo(0, 0);
-          clearInterval(intervalId);
-        }
+      intervalId = setInterval(() => {
+        handleCallHistoricalTransaction();
       }, 2000);
     }
-    // Cleanup interval on unmount
+    if (payment.status === true && intervalId) {
+      clearInterval(intervalId);
+    }
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [isOnlinePayment]);
+  }, [isOnlinePayment, payment.status, handleCallHistoricalTransaction]);
 
   // Check if we have booking data
   if (!bookingData) {
