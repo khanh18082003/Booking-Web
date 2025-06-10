@@ -66,6 +66,11 @@ const ReviewsContent = ({ isLoading: loadingProp }) => {
       setNewReview({ review: "", rating: 0 });
       fetchReviews(1, true); // reload reviews
     } catch (err) {
+      if (err.response.data.code === "M0505") {
+        console.error(err);
+        alert("Ban chưa ở khách sạn này nên không thể đánh giá nó!");
+        return;
+      }
       console.error(err);
       alert("Gửi đánh giá thất bại!");
     }
