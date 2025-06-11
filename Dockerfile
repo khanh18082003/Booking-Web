@@ -1,3 +1,4 @@
+
 FROM node:18-alpine as build
 
 WORKDIR /app
@@ -22,6 +23,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 # Sao chép cấu hình nginx tùy chỉnh (tạo trước khi chạy)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 
 EXPOSE 80
 
