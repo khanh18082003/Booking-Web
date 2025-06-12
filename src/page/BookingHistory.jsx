@@ -10,7 +10,7 @@ const BookingHistory = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("COMPLETED");
+  const [activeTab, setActiveTab] = useState("COMPLETE");
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState({});
@@ -450,8 +450,8 @@ const BookingHistory = () => {
         <div className="flex items-center gap-4">
           <div>
             <button
-              onClick={() => setActiveTab("COMPLETED")}
-              className={`cursor-pointer rounded-full px-4 py-[11px] ${activeTab === "COMPLETED" && "border-1 border-third bg-third/10 text-third"}`}
+              onClick={() => setActiveTab("COMPLETE")}
+              className={`cursor-pointer rounded-full px-4 py-[11px] ${activeTab === "COMPLETE" && "border-1 border-third bg-third/10 text-third"}`}
             >
               Đã qua
             </button>
@@ -465,7 +465,7 @@ const BookingHistory = () => {
             </button>
           </div>
         </div>
-        {activeTab === "COMPLETED" ? (
+        {activeTab === "COMPLETE" ? (
           <div className="mt-6">
             {filteredBookings.length > 0 ? (
               <div className="grid grid-cols-3 gap-4">
@@ -495,7 +495,7 @@ const BookingHistory = () => {
           </div>
         ) : (
           activeTab === "CANCELLED" && (
-            <div className="mt-6 flex flex-wrap items-center gap-4">
+            <div className="mt-6 grid grid-cols-3 gap-4">
               {filteredBookings.length > 0 ? (
                 filteredBookings.map((booking) => renderBookingCard(booking))
               ) : (

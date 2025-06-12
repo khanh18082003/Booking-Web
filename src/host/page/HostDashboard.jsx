@@ -15,17 +15,10 @@ const HostDashboard = () => {
 
   // State cho sidebar navigation
   const [activeTab, setActiveTab] = useState("properties");
-
   useEffect(() => {
     setPageTitle(PAGE_TITLES.DASHBOARD_HOST);
     setLoading(false);
   }, []);
-
-  // Handle edit property - pass to PropertiesManagement component
-  const handleEditProperty = (propertyId) => {
-    // This will be handled by the PropertiesManagement component
-    console.log("Edit property:", propertyId);
-  };
 
   // Sidebar Menu Items
   const sidebarItems = [
@@ -105,9 +98,7 @@ const HostDashboard = () => {
       <div className="flex-1 overflow-auto">
         <div className="p-6">
           {activeTab === "revenue" && <RevenueDashboard />}
-          {activeTab === "properties" && (
-            <PropertiesManagement onEditProperty={handleEditProperty} />
-          )}
+          {activeTab === "properties" && <PropertiesManagement />}
           {activeTab === "bookings" && <BookingsManagement />}
         </div>
       </div>

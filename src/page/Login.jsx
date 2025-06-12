@@ -72,6 +72,7 @@ const Login = () => {
       const response = await axios.post("/auth/login", {
         email: formData.email,
         password: formData.password,
+        device: "WEB",
       });
 
       const responseBody = response.data;

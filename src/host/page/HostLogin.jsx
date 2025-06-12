@@ -43,6 +43,7 @@ const HostLogin = () => {
       const response = await hostAxios.post("/auth/host/login", {
         email: formData.email,
         password: formData.password,
+        device: "WEB",
       });
 
       const responseBody = response.data;

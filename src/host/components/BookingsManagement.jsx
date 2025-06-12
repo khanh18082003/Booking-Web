@@ -9,6 +9,7 @@ import {
   FaFilter,
   FaSpinner,
   FaExclamationTriangle,
+  FaCheck,
 } from "react-icons/fa";
 import hostInstance from "../../configuration/hostAxiosCustomize";
 
@@ -19,12 +20,14 @@ const BookingsManagement = () => {
   const [bookingsData, setBookingsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [metaData, setMetaData] = useState({
     page: 1,
     pageSize: 20,
     pages: 1,
     total: 0,
   });
+  const [updateLoading, setUpdateLoading] = useState({});
   // Fetch properties for dropdown - lấy từ API giống PropertiesManagement
   useEffect(() => {
     const fetchProperties = async () => {
@@ -84,6 +87,116 @@ const BookingsManagement = () => {
 
     fetchBookings();
   }, [selectedProperty]);
+
+  // Helper function to refresh bookings data
+  const refreshBookingsData = async () => {
+    try {
+      const propertyId = selectedProperty || "all";
+      const response = await hostInstance.get(
+        `/properties/${propertyId}/bookings`,
+      );
+      if (response.data && response.data.data) {
+        setBookingsData(response.data.data.data || []);
+        setMetaData(
+          response.data.data.meta || {
+            page: 1,
+            pageSize: 20,
+            pages: 1,
+            total: 0,
+          },
+        );
+      }
+    } catch (err) {
+      console.error("Error refreshing bookings data:", err);
+    }
+  };
+
+  // Function to update payment status
+  const updatePaymentStatus = async (bookingId) => {
+    setUpdateLoading((prev) => ({ ...prev, [bookingId]: true }));
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const response = await hostInstance.patch(
+        `/payments/bookings/${bookingId}`,
+      );
+
+      console.log("Payment API Response:", response.data); // Debug log
+
+      if (
+        response.data &&
+        (response.data.code === 200 || response.status === 200)
+      ) {
+        // Simply refresh the data instead of trying to update state directly
+        await refreshBookingsData();
+
+        setSuccessMessage("Đã cập nhật trạng thái thanh toán thành công!");
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        console.error("Unexpected payment API response:", response.data);
+        setError("Phản hồi API không như mong đợi. Vui lòng thử lại.");
+      }
+    } catch (err) {
+      console.error("Error updating payment status:", err);
+      setError("Có lỗi khi cập nhật trạng thái thanh toán. Vui lòng thử lại.");
+    } finally {
+      setUpdateLoading((prev) => ({ ...prev, [bookingId]: false }));
+    }
+  };
+
+  // Function to update booking status
+  const updateBookingStatus = async (bookingId, newStatus) => {
+    setUpdateLoading((prev) => ({ ...prev, [bookingId]: true }));
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      let apiEndpoint;
+
+      // Determine API endpoint based on status
+      if (newStatus === "COMPLETE") {
+        apiEndpoint = `/bookings/${bookingId}/complete`;
+      } else if (newStatus === "CANCELLED") {
+        apiEndpoint = `/bookings/${bookingId}/cancellation`;
+      } else {
+        // For other statuses (like CONFIRMED), use the original endpoint
+        apiEndpoint = `/bookings/${bookingId}/status`;
+      }
+
+      let response;
+      if (newStatus === "COMPLETE" || newStatus === "CANCELLED") {
+        // For complete and cancellation, just call the endpoint without body
+        response = await hostInstance.patch(apiEndpoint);
+      } else {
+        // For other statuses, send the status in body
+        response = await hostInstance.patch(apiEndpoint, {
+          status: newStatus,
+        });
+      }
+
+      console.log("API Response:", response.data); // Debug log
+
+      if (
+        response.data &&
+        (response.data.code === 200 || response.status === 200)
+      ) {
+        // Simply refresh the data instead of trying to update state directly
+        await refreshBookingsData();
+
+        setSuccessMessage(
+          `Đã cập nhật trạng thái đặt phòng thành "${getStatusText(newStatus)}" thành công!`,
+        );
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        console.error("Unexpected API response:", response.data);
+        setError("Phản hồi API không như mong đợi. Vui lòng thử lại.");
+      }
+    } catch (err) {
+      console.error("Error updating booking status:", err);
+      setError("Có lỗi khi cập nhật trạng thái đặt phòng. Vui lòng thử lại.");
+    } finally {
+      setUpdateLoading((prev) => ({ ...prev, [bookingId]: false }));
+    }
+  };
 
   // Filter bookings based on search term
   const filteredBookings = bookingsData.filter((booking) => {
@@ -213,6 +326,16 @@ const BookingsManagement = () => {
             <div className="flex items-center">
               <FaExclamationTriangle className="mr-2" />
               <span>{error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Success message */}
+        {successMessage && (
+          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4 text-green-700">
+            <div className="flex items-center">
+              <FaCheck className="mr-2" />
+              <span>{successMessage}</span>
             </div>
           </div>
         )}
@@ -380,10 +503,16 @@ const BookingsManagement = () => {
                       <div className="text-sm font-medium text-gray-900">
                         {booking.total_price.toLocaleString("vi-VN")}đ
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div
+                        className={`text-xs font-medium ${
+                          booking.payment_status
+                            ? "text-green-600"
+                            : "text-orange-600"
+                        }`}
+                      >
                         {booking.payment_status
-                          ? "Đã thanh toán"
-                          : "Chưa thanh toán"}
+                          ? "✓ Đã thanh toán"
+                          : "⏳ Chưa thanh toán"}
                       </div>
                       <div className="text-xs text-gray-400">
                         {booking.payment_method}
@@ -404,21 +533,77 @@ const BookingsManagement = () => {
                         >
                           <FaEye className="h-4 w-4" />
                         </button>
-                        {booking.status === "CONFIRMED" && (
-                          <>
+
+                        {/* Button cập nhật trạng thái thanh toán */}
+                        {!booking.payment_status && (
+                          <button
+                            onClick={() => updatePaymentStatus(booking.id)}
+                            disabled={updateLoading[booking.id]}
+                            className="rounded p-1 text-green-600 hover:bg-green-100 hover:text-green-900 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Đánh dấu đã thanh toán"
+                          >
+                            {updateLoading[booking.id] ? (
+                              <FaSpinner className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <FaCheck className="h-4 w-4" />
+                            )}
+                          </button>
+                        )}
+
+                        {/* Button xác nhận */}
+                        {booking.status !== "CONFIRMED" &&
+                          booking.status !== "COMPLETE" &&
+                          booking.status !== "CANCELLED" && (
                             <button
-                              className="rounded p-1 text-green-600 hover:bg-green-100 hover:text-green-900"
+                              onClick={() =>
+                                updateBookingStatus(booking.id, "CONFIRMED")
+                              }
+                              disabled={updateLoading[booking.id]}
+                              className="rounded p-1 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-900 disabled:cursor-not-allowed disabled:opacity-50"
                               title="Xác nhận đặt phòng"
                             >
-                              <FaSave className="h-4 w-4" />
+                              {updateLoading[booking.id] ? (
+                                <FaSpinner className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FaSave className="h-4 w-4" />
+                              )}
                             </button>
-                            <button
-                              className="rounded p-1 text-red-600 hover:bg-red-100 hover:text-red-900"
-                              title="Hủy đặt phòng"
-                            >
+                          )}
+
+                        {/* Button hoàn thành */}
+                        {booking.status === "CONFIRMED" && (
+                          <button
+                            onClick={() =>
+                              updateBookingStatus(booking.id, "COMPLETE")
+                            }
+                            disabled={updateLoading[booking.id]}
+                            className="rounded p-1 text-blue-600 hover:bg-blue-100 hover:text-blue-900 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Đánh dấu hoàn thành"
+                          >
+                            {updateLoading[booking.id] ? (
+                              <FaSpinner className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <FaCheck className="h-4 w-4" />
+                            )}
+                          </button>
+                        )}
+
+                        {/* Button hủy */}
+                        {booking.status === "CONFIRMED" && (
+                          <button
+                            onClick={() =>
+                              updateBookingStatus(booking.id, "CANCELLED")
+                            }
+                            disabled={updateLoading[booking.id]}
+                            className="rounded p-1 text-red-600 hover:bg-red-100 hover:text-red-900 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Hủy đặt phòng"
+                          >
+                            {updateLoading[booking.id] ? (
+                              <FaSpinner className="h-4 w-4 animate-spin" />
+                            ) : (
                               <FaTimes className="h-4 w-4" />
-                            </button>
-                          </>
+                            )}
+                          </button>
                         )}
                       </div>
                     </td>
